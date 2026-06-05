@@ -1,3 +1,1 @@
-import React from 'react';
-type P={id?:string;label:string;value:string;onChange:any;error?:string;type?:string;placeholder?:string;required?:boolean;disabled?:boolean;className?:string};
-export default function InputField(p:P){const ch=(e:React.ChangeEvent<HTMLInputElement>)=>p.onChange(e.target.value);return <div><label>{p.label}</label><input id={p.id} type={p.type||'text'} value={p.value} onChange={ch} placeholder={p.placeholder} required={p.required} disabled={p.disabled} className={p.className}/>{p
+export default function InputField(p:any){return <input id={p.id} type={p.type||'text'} value={p.value||''} onChange={(e:any)=>p.onChange(e.target.value)} required={p.required} disabled={p.disabled}/>;}
