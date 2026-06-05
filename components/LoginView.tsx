@@ -11,4 +11,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState('');
 
-  const handleGoogle
+  const handleLogin = async () => {
+    setLocalError('');
+    setIsLoading(true);
