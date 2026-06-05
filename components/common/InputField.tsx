@@ -1,7 +1,3 @@
 import React from 'react';
-
-type Props={id?:string;label:string;value:string;onChange:any;error?:string;type?:string;placeholder?:string;required?:boolean;disabled?:boolean;className?:string};
-
-const InputField:React.FC<Props>=({id,label,value,onChange,error,type='text',placeholder,required,disabled,className})=>{
-  const handleChange=(e:React.ChangeEvent<HTMLInputElement>)=>{try{onChange(e)}catch{onChange(e.target.value)}};
-  return <div className="mb-4"><label htmlFor={id} className="block text-slate-700 text-sm font-bold mb-2">{label}</label><input type={type} id={id} value={value} onChange={handleChange} placeholder
+type P={id?:string;label:string;value:string;onChange:any;error?:string;type?:string;placeholder?:string;required?:boolean;disabled?:boolean;className?:string};
+export default function InputField(p:P){const ch=(e:React.ChangeEvent<HTMLInputElement>)=>p.onChange(e.target.value);return <div><label>{p.label}</label><input id={p.id} type={p.type||'text'} value={p.value} onChange={ch} placeholder={p.placeholder} required={p.required} disabled={p.disabled} className={p.className}/>{p
