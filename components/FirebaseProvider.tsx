@@ -6,7 +6,4 @@ import { simpleHash } from '../utils/authUtils';
 interface FirebaseContextType {
   user: FirebaseUser | null;
   currentUser: User | null;
-  loading: boolean;
-  isAdmin: boolean;
-  error: string | null;
-  loginWithCredentials: (username
+  loading
