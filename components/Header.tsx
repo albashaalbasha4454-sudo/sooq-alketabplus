@@ -3,16 +3,17 @@ import React from 'react';
 import type { User } from '../types';
 import { Logo } from './Logo';
 import { motion } from 'motion/react';
-import { Menu, LogOut, ReceiptText, User as UserIcon } from 'lucide-react';
+import { Menu, LogOut, ReceiptText, User as UserIcon, Search } from 'lucide-react';
 
 interface HeaderProps {
     currentUser: User;
     onLogout: () => void;
     toggleSidebar: () => void;
     onOpenCloseTillModal: () => void;
+    onOpenSearch: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, toggleSidebar, onOpenCloseTillModal }) => {
+const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, toggleSidebar, onOpenCloseTillModal, onOpenSearch }) => {
     return (
         <motion.header 
             initial={{ y: -20, opacity: 0 }}
@@ -36,6 +37,15 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, toggleSidebar, o
             </div>
 
             <div className="flex items-center gap-3">
+                <button 
+                    onClick={onOpenSearch}
+                    className="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 text-slate-600 hover:text-indigo-600 px-4 py-2 rounded-xl transition-all font-bold text-xs"
+                    title="البحث التفصيلي الشامل (Ctrl+K)"
+                >
+                    <Search size={16} className="text-slate-400 group-hover:text-indigo-600" />
+                    <span className="hidden md:inline">البحث الشامل والتفصيلي</span>
+                </button>
+
                 {currentUser.role === 'cashier' && (
                     <button 
                         onClick={onOpenCloseTillModal} 

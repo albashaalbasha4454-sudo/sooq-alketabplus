@@ -30,6 +30,7 @@ import FinancialSummaryView from './components/FinancialSummaryView';
 import { BackupAndArchiveView } from './components/BackupAndArchiveView';
 import { AuditLogView } from './components/AuditLogView';
 import { RecycleBinView } from './components/RecycleBinView';
+import { DetailedSearchModal } from './components/DetailedSearchModal';
 
 
 import { logAction } from './utils/auditLogger';
@@ -73,6 +74,7 @@ const App: React.FC = () => {
     const [shopAddress] = useLocalStorage<string>('shopAddress', 'تفاصيل العنوان ورقم الهاتف');
     const [isCloseTillModalOpen, setIsCloseTillModalOpen] = useState(false);
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     
     // --- COMPUTED VALUES ---
     const accountBalances = useMemo(() => {
@@ -643,6 +645,7 @@ const App: React.FC = () => {
                     onLogout={logout} 
                     toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                     onOpenCloseTillModal={() => setIsCloseTillModalOpen(true)}
+                    onOpenSearch={() => setIsSearchOpen(true)}
                 />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto relative scroll-smooth">
                     <motion.div
@@ -685,6 +688,21 @@ const App: React.FC = () => {
             <SystemResetModal 
                 isOpen={isResetModalOpen} 
                 onClose={() => setIsResetModalOpen(false)} 
+            />
+            <DetailedSearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                products={products}
+                invoices={invoices}
+                expenses={expenses}
+                customers={customers}
+                suppliers={suppliers}
+                accounts={accounts}
+                users={users}
+                currentUser={currentUser}
+                onNavigate={setCurrentView}
+                onOpenCloseTill={() => setIsCloseTillModalOpen(true)}
+                onOpenReset={() => setIsResetModalOpen(true)}
             />
         </div>
     );
