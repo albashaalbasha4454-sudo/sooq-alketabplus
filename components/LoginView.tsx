@@ -1,13 +1,12 @@
 import { useState } from 'react';
 
-type Props = { onLogin: () => Promise<void> };
+type Props={onLogin:()=>Promise<void>};
+const W=import.meta.env.VITE_LOGIN_WORD||'admin';
+const C=import.meta.env.VITE_LOGIN_CODE||'1234';
 
-const ACCESS_WORD = import.meta.env.VITE_LOGIN_WORD || 'admin';
-const ACCESS_CODE = import.meta.env.VITE_LOGIN_CODE || '1234';
-
-export default function LoginView({ onLogin }: Props) {
-  const [word, setWord] = useState('');
-  const [code, setCode] = useState('');
-  const [error, setError] = useState('');
-
-  const submit
+export default function LoginView({onLogin}:Props){
+ const [w,setW]=useState('');
+ const [c,setC]=useState('');
+ const [e,setE]=useState('');
+ const ok=()=>{if(w===W&&c===C){void onLogin()}else setE('Wrong word or code')};
+ return <main dir="rtl"><h1>سوق الكتاب
