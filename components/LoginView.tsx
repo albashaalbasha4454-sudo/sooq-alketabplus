@@ -10,3 +10,4 @@ interface LoginViewProps {
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   const { user: firebaseUser, error: firebaseError } = useFirebase();
+  const [isLoading, setIsLoading] = use
