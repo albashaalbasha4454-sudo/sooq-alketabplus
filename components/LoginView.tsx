@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { BookOpen, Loader2 } from 'lucide-react';
-import { useFirebase } from './FirebaseProvider';
+import React from 'react';
 
 interface LoginViewProps {
   onLogin: () => Promise<void>;
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
-  const { error: firebaseError } = useFirebase();
-  const [isLoading, setIsLoading] = useState(false);
-  const [localError, setLocalError] = useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   const handleLogin = async () => {
-    setLocalError('');
-    setIsLoading(true);
+    try {
+      setError('');
+      setLoading(true);
+      await onLogin();
+    } catch {
+      setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
