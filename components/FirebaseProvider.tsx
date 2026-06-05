@@ -4,5 +4,5 @@ import type { User } from '../types';
 import { simpleHash } from '../utils/authUtils';
 
 interface FirebaseContextType {
-    user: FirebaseUser | null;
-    currentUser: User | null;
+  user: FirebaseUser | null;
+  currentUser: User | null
