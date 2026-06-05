@@ -4,13 +4,13 @@ import { useFirebase } from './FirebaseProvider';
 import { logAction } from '../utils/auditLogger';
 
 export const SystemResetModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { user, isAdmin } = useFirebase();
+    const { user, isAdmin, loading: fbLoading } = useFirebase();
     const [request, setRequest] = useState<any>(null);
     const [confirmText, setConfirmText] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || fbLoading || !isAdmin) return;
         const q = query(collection(db, 'resetRequests'), where('status', '==', 'pending'), limit(1));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
@@ -20,7 +20,7 @@ export const SystemResetModal: React.FC<{ isOpen: boolean; onClose: () => void }
             }
         });
         return unsubscribe;
-    }, [isOpen]);
+    }, [isOpen, isAdmin, fbLoading]);
 
     const handleCreateRequest = async () => {
         if (!user || !isAdmin) return;

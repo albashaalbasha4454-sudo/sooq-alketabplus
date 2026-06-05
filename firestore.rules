@@ -4,7 +4,7 @@ service cloud.firestore {
     
     // --- GLOBAL HELPERS (PHASE 3) ---
     function isSignedIn() {
-      return request.auth != null && request.auth.token.email_verified == true;
+      return request.auth != null;
     }
     
     function isAdmin() {

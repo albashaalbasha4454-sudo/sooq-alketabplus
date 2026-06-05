@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, query, orderBy, limit, onSnapshot, where } from '../firebase';
+import { db, collection, query, orderBy, limit, onSnapshot, where, handleFirestoreError, OperationType } from '../firebase';
+
+import { useFirebase } from './FirebaseProvider';
 
 export const AuditLogView: React.FC = () => {
+    const { isAdmin: isFbAdmin, loading: fbLoading } = useFirebase();
     const [logs, setLogs] = useState<any[]>([]);
     const [filter, setFilter] = useState('');
 
     useEffect(() => {
-        const q = query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'), limit(50));
+        if (fbLoading || !isFbAdmin) return;
+
+        const path = 'auditLogs';
+        const q = query(collection(db, path), orderBy('timestamp', 'desc'), limit(50));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, path);
         });
         return unsubscribe;
-    }, []);
+    }, [isFbAdmin, fbLoading]);
 
     const filteredLogs = logs.filter(log => 
         log.action.toLowerCase().includes(filter.toLowerCase()) ||

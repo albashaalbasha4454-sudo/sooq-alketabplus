@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, query, orderBy, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp } from '../firebase';
+import { db, collection, query, orderBy, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp, handleFirestoreError, OperationType } from '../firebase';
 import { logAction } from '../utils/auditLogger';
 
+import { useFirebase } from './FirebaseProvider';
+
 export const RecycleBinView: React.FC = () => {
+    const { isAdmin: isFbAdmin, loading: fbLoading } = useFirebase();
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, 'recycleBin'), orderBy('deletedAt', 'desc'));
+        if (fbLoading || !isFbAdmin) return;
+
+        const path = 'recycleBin';
+        const q = query(collection(db, path), orderBy('deletedAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, path);
         });
         return unsubscribe;
-    }, []);
+    }, [isFbAdmin, fbLoading]);
 
     const handleRestore = async (item: any) => {
         if (!window.confirm('هل تريد استعادة هذا العنصر؟')) return;
@@ -20,13 +28,21 @@ export const RecycleBinView: React.FC = () => {
         try {
             // 1. Restore to original collection
             const { id, deletedAt, deletedBy, originalCollection, originalId, data, expiresAt, ...rest } = item;
-            await addDoc(collection(db, originalCollection), {
-                ...data,
-                restoredAt: serverTimestamp()
-            });
+            try {
+                await addDoc(collection(db, originalCollection), {
+                    ...data,
+                    restoredAt: serverTimestamp()
+                });
+            } catch (error) {
+                handleFirestoreError(error, OperationType.CREATE, originalCollection);
+            }
 
             // 2. Delete from recycle bin
-            await deleteDoc(doc(db, 'recycleBin', item.id));
+            try {
+                await deleteDoc(doc(db, 'recycleBin', item.id));
+            } catch (error) {
+                handleFirestoreError(error, OperationType.DELETE, `recycleBin/${item.id}`);
+            }
             
             await logAction('RESTORE', `Restored ${originalCollection} with ID ${originalId}`);
             alert('تمت استعادة العنصر بنجاح.');
@@ -43,6 +59,10 @@ export const RecycleBinView: React.FC = () => {
         setLoading(true);
         try {
             await deleteDoc(doc(db, 'recycleBin', item.id));
+        } catch (error) {
+            handleFirestoreError(error, OperationType.DELETE, `recycleBin/${item.id}`);
+        }
+        try {
             await logAction('PERMANENT_DELETE', `Permanently deleted ${item.originalCollection} with original ID ${item.originalId}`);
             alert('تم الحذف النهائي.');
         } catch (err) {

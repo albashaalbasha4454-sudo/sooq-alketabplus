@@ -24,6 +24,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ invoices, users, onUpdateStatus
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
+  const [autoExportPDF, setAutoExportPDF] = useState(false);
   const [invoiceToReturn, setInvoiceToReturn] = useState<Invoice | null>(null);
   const [invoiceToRequestReturn, setInvoiceToRequestReturn] = useState<Invoice | null>(null);
 
@@ -46,6 +47,11 @@ const OrdersView: React.FC<OrdersViewProps> = ({ invoices, users, onUpdateStatus
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredInvoices.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredInvoices, currentPage]);
+
+  const handleExportPDF = async (invoice: Invoice) => {
+    setAutoExportPDF(true);
+    setInvoiceToPrint(invoice);
+  };
 
   const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
 
@@ -182,7 +188,10 @@ const OrdersView: React.FC<OrdersViewProps> = ({ invoices, users, onUpdateStatus
                         {/* Actions */}
                         <div className="flex items-center justify-center md:justify-center gap-1 border-t border-slate-100 pt-2 md:border-0 md:pt-0">
                             <button onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition-colors" title="تفاصيل"><span className="material-symbols-outlined text-lg">info</span></button>
-                            <button onClick={() => setInvoiceToPrint(inv)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-green-600 transition-colors" title="طباعة"><span className="material-symbols-outlined text-lg">print</span></button>
+                            <button onClick={() => { setAutoExportPDF(false); setInvoiceToPrint(inv); }} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-green-600 transition-colors" title="طباعة"><span className="material-symbols-outlined text-lg">print</span></button>
+                            <button onClick={() => handleExportPDF(inv)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition-colors" title="تصدير PDF">
+                                <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                            </button>
                             
                             {(inv.type === 'sale' || (inv.type === 'shipping' && inv.status === 'completed')) && (
                                 currentUser.role === 'admin' ? (
@@ -230,7 +239,15 @@ const OrdersView: React.FC<OrdersViewProps> = ({ invoices, users, onUpdateStatus
         </div>
       </div>
 
-      {invoiceToPrint && <PrintInvoice invoice={invoiceToPrint} onClose={() => setInvoiceToPrint(null)} shopName={shopName} shopAddress={shopAddress} />}
+      {invoiceToPrint && (
+        <PrintInvoice 
+            invoice={invoiceToPrint} 
+            onClose={() => { setInvoiceToPrint(null); setAutoExportPDF(false); }} 
+            shopName={shopName} 
+            shopAddress={shopAddress} 
+            autoExportPDF={autoExportPDF}
+        />
+      )}
       {invoiceToReturn && <ReturnModal invoice={invoiceToReturn} onClose={() => setInvoiceToReturn(null)} onProcessReturn={handleProcessReturn} />}
       {invoiceToRequestReturn && <RequestReturnModal invoice={invoiceToRequestReturn} onClose={() => setInvoiceToRequestReturn(null)} onSendRequest={handleSendReturnRequest} />}
     </div>

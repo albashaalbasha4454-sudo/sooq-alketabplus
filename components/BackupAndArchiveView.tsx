@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs } from '../firebase';
+import { db, collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs, handleFirestoreError, OperationType } from '../firebase';
 import { logAction } from '../utils/auditLogger';
 
+import { useFirebase } from './FirebaseProvider';
+
 export const BackupAndArchiveView: React.FC = () => {
+    const { isAdmin: isFbAdmin, loading: fbLoading } = useFirebase();
     const [backups, setBackups] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, 'backups'), orderBy('timestamp', 'desc'), limit(10));
+        if (fbLoading || !isFbAdmin) return;
+
+        const path = 'backups';
+        const q = query(collection(db, path), orderBy('timestamp', 'desc'), limit(10));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setBackups(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, path);
         });
         return unsubscribe;
-    }, []);
+    }, [isFbAdmin, fbLoading]);
 
     const handleManualBackup = async () => {
         setLoading(true);
@@ -22,8 +30,12 @@ export const BackupAndArchiveView: React.FC = () => {
             const backupData: any = {};
             
             for (const coll of collections) {
-                const snap = await getDocs(collection(db, coll));
-                backupData[coll] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                try {
+                    const snap = await getDocs(collection(db, coll));
+                    backupData[coll] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } catch (error) {
+                    handleFirestoreError(error, OperationType.LIST, coll);
+                }
             }
 
             const jsonString = JSON.stringify(backupData);

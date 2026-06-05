@@ -1,17 +1,22 @@
 
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Invoice } from './types';
 import { Logo } from './components/Logo';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface PrintInvoiceProps {
   invoice: Invoice;
   onClose: () => void;
   shopName: string;
   shopAddress: string;
+  autoExportPDF?: boolean;
 }
 
-const PrintInvoice: React.FC<PrintInvoiceProps> = ({ invoice, onClose, shopName, shopAddress }) => {
+const PrintInvoice: React.FC<PrintInvoiceProps> = ({ invoice, onClose, shopName, shopAddress, autoExportPDF }) => {
+    const [isExporting, setIsExporting] = useState(false);
+
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -19,13 +24,60 @@ const PrintInvoice: React.FC<PrintInvoiceProps> = ({ invoice, onClose, shopName,
             }
         };
         window.addEventListener('keydown', handleKeyPress);
+        
+        if (autoExportPDF) {
+            handleExportPDF();
+        }
+
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
         };
-    }, [onClose]);
+    }, [onClose, autoExportPDF]);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPDF = async () => {
+    const element = document.getElementById('print-area');
+    if (!element) return;
+
+    setIsExporting(true);
+    try {
+      // Small delay to ensure everything is rendered
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 794 // A4 width in pixels at 96 DPI
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`فاتورة-${invoice.id.substring(0, 8)}.pdf`);
+      
+      // Auto-close if it was an auto-export
+      if (autoExportPDF) {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('حدث خطأ أثناء تصدير ملف PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const subtotal = invoice.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -185,6 +237,18 @@ const PrintInvoice: React.FC<PrintInvoiceProps> = ({ invoice, onClose, shopName,
           >
             <span className="material-symbols-outlined">print</span>
             طباعة الفاتورة
+          </button>
+          <button
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg ${
+                isExporting 
+                ? 'bg-slate-400 text-slate-200 cursor-not-allowed' 
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+          >
+            <span className="material-symbols-outlined">{isExporting ? 'sync' : 'picture_as_pdf'}</span>
+            {isExporting ? 'جاري الحفظ...' : 'تصدير PDF'}
           </button>
           <button
             onClick={onClose}
