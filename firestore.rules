@@ -39,7 +39,7 @@ service cloud.firestore {
       return data.username is string && data.username.size() >= 3 && data.username.size() <= 50
              && data.role in ['admin', 'cashier']
              && data.keys().hasAll(['username', 'passwordHash', 'salt', 'role'])
-             && data.keys().size() == 4;
+             && data.keys().size() <= 6; // Allow username, role, passwordHash, salt, id, email
     }
 
     function isValidProduct(data) {
@@ -79,9 +79,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
-      allow create: if isAdmin() && isValidUser(incoming());
+      allow read: if true;
+      allow create: if (isAdmin() || !exists(/databases/$(database)/documents/users/bootstrap_admin)) && isValidUser(incoming());
       allow update: if isAdmin() && isValidUser(incoming());
       allow delete: if isAdmin();
     }

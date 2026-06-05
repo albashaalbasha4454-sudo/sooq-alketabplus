@@ -29,20 +29,26 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         const checkAndSeed = async () => {
             try {
-                const usersRef = collection(db, 'users');
-                const q = query(usersRef, where('role', '==', 'admin'));
-                const snapshot = await getDocs(q);
+                // Use getDoc on the known bootstrap ID to avoid listing permissions if possible
+                const bootstrapDoc = await getDoc(doc(db, 'users', 'bootstrap_admin'));
                 
-                if (snapshot.empty) {
-                    const salt = 'default_salt';
-                    const adminUser: User = {
-                        id: 'bootstrap_admin',
-                        username: 'admin',
-                        role: 'admin',
-                        passwordHash: simpleHash('admin', salt),
-                        salt: salt
-                    };
-                    await setDoc(doc(db, 'users', 'bootstrap_admin'), adminUser);
+                if (!bootstrapDoc.exists()) {
+                    // Check if any admin exists before creating bootstrap
+                    const usersRef = collection(db, 'users');
+                    const q = query(usersRef, where('role', '==', 'admin'));
+                    const snapshot = await getDocs(q);
+                    
+                    if (snapshot.empty) {
+                        const salt = 'default_salt';
+                        const adminData = {
+                            username: 'admin',
+                            role: 'admin',
+                            passwordHash: simpleHash('admin', salt),
+                            salt: salt
+                        };
+                        await setDoc(doc(db, 'users', 'bootstrap_admin'), adminData);
+                        console.log('Database seeded with bootstrap admin');
+                    }
                 }
             } catch (err) {
                 console.error('Seeding failed:', err);
