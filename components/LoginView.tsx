@@ -1,12 +1,2 @@
-import React,{useState}from'react';
-
 type Props={onLogin:()=>Promise<void>};
-const W=import.meta.env.VITE_LOGIN_WORD||'admin';
-const C=import.meta.env.VITE_LOGIN_CODE||'1234';
-
-export default function LoginView({onLogin}:Props){
- const [w,setW]=useState('');
- const [c,setC]=useState('');
- const [e,setE]=useState('');
- function go(){if(w===W&&c===C)void onLogin();else setE('Invalid access');}
- return React.createElement('main',null,
+export default function LoginView({onLogin}:Props){return <button onClick={()=>void onLogin()}>Login</button>;}
