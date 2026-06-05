@@ -8,4 +8,5 @@ interface FirebaseContextType {
     currentUser: User | null;
     loading: boolean;
     isAdmin: boolean;
-    error: string | null
+    error: string | null;
+    loginWithCredentials: (username: string
