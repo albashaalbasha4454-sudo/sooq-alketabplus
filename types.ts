@@ -9,6 +9,10 @@ export interface Product {
   salePrice?: number;
   costPrice?: number;
   allocated?: number;
+  isbn?: string;
+  publisher?: string;
+  barcode?: string;
+  rackNumber?: string;
 }
 
 export interface InvoiceItem {
@@ -36,6 +40,7 @@ export interface Customer {
   address?: string;
   email?: string;
   notes?: string;
+  balance: number;
 }
 
 export interface User {
@@ -110,6 +115,7 @@ export interface Supplier {
     phone?: string;
     email?: string;
     address?: string;
+    balance: number;
 }
 
 export interface Purchase {

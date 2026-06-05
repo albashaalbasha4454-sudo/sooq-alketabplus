@@ -9,7 +9,7 @@ interface LoginViewProps {
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
-  const { login: firebaseLogin, user: firebaseUser } = useFirebase();
+  const { login: firebaseLogin, user: firebaseUser, error: firebaseError } = useFirebase();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,6 +29,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     }
     setIsLoading(false);
   };
+
+  const displayError = firebaseError || error;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC] font-sans" dir="rtl">
@@ -93,14 +95,14 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             </div>
 
             <AnimatePresence mode="wait">
-              {error && (
+              {displayError && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-red-50 text-red-500 text-xs font-bold p-3 rounded-lg text-center border border-red-100"
+                  className="bg-red-50 text-red-500 text-[10px] font-black p-3 rounded-lg text-center border border-red-100 uppercase tracking-tight"
                 >
-                  {error}
+                  {displayError}
                 </motion.div>
               )}
             </AnimatePresence>

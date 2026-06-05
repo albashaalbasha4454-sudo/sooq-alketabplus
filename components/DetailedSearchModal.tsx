@@ -156,24 +156,24 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
         const filteredInvoices = invoices.filter(inv => {
             const matchesQuery = !query || 
                 inv.id.toLowerCase().includes(query) || 
-                inv.customerName.toLowerCase().includes(query) || 
-                inv.customerPhone?.includes(query);
+                (inv.customerInfo?.name || '').toLowerCase().includes(query) || 
+                (inv.customerInfo?.phone || '').includes(query);
 
             // Filter by Payment Status
             const matchesPayment = paymentStatus === 'all' || inv.paymentStatus === paymentStatus;
 
             // Filter by Invoice type
-            const matchesType = invoiceType === 'all' || inv.orderType === invoiceType;
+            const matchesType = invoiceType === 'all' || inv.type === invoiceType;
 
             return matchesQuery && matchesPayment && matchesType;
         }).map(inv => ({
             id: inv.id,
             type: 'invoice' as const,
             title: `فاتورة رقم ${inv.id.toUpperCase()}`,
-            subtitle: `العميل: ${inv.customerName} | الإجمالي: ${inv.total.toLocaleString()} ر.س | كاش: ${inv.paymentMethod === 'cash' ? 'نقدي' : 'شبكة'} | الحالة: ${inv.paymentStatus === 'paid' ? 'مدفوعة' : 'آجلة'}`,
+            subtitle: `العميل: ${inv.customerInfo?.name || 'بدون اسم'} | الإجمالي: ${inv.total.toLocaleString()} ر.س | الحالة: ${inv.paymentStatus === 'paid' ? 'مدفوعة' : 'آجلة'}`,
             icon: Receipt,
             payload: inv,
-            badge: inv.orderType === 'shipping' ? 'طلب شحن' : inv.orderType === 'reservation' ? 'حجز عميل' : 'بيع مباشر'
+            badge: inv.type === 'shipping' ? 'طلب شحن' : inv.type === 'reservation' ? 'حجز عميل' : 'بيع مباشر'
         }));
 
         // 4. Contacts (Customers / Suppliers)
@@ -228,14 +228,14 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
         // 5. Finance
         const filteredExpenses = expenses.filter(exp => {
             return !query || 
-                exp.category.toLowerCase().includes(query) || 
-                exp.notes?.toLowerCase().includes(query) || 
+                (exp.category || '').toLowerCase().includes(query) || 
+                (exp.description || '').toLowerCase().includes(query) || 
                 exp.amount.toString().includes(query);
         }).map(exp => ({
             id: exp.id,
             type: 'finance' as const,
             title: `مصروف: ${exp.category}`,
-            subtitle: `المبلغ: ${exp.amount.toLocaleString()} ر.س | التفاصيل: ${exp.notes || 'بدون ملاحظات'} | التاريخ: ${new Date(exp.date).toLocaleDateString('ar-EG')}`,
+            subtitle: `المبلغ: ${exp.amount.toLocaleString()} ر.س | التفاصيل: ${exp.description || 'بدون ملاحظات'} | التاريخ: ${new Date(exp.date).toLocaleDateString('ar-EG')}`,
             icon: Wallet,
             payload: exp,
             badge: 'عملية صرف'

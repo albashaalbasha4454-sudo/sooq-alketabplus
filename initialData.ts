@@ -28,15 +28,15 @@ const createInitialProducts = (): Product[] => {
 
 const createInitialCustomers = (): Customer[] => {
     return [
-        { id: 'cust-1', name: 'أحمد محمود', phone: '01012345678', address: '123 شارع النصر، القاهرة', email: 'ahmed@email.com', notes: 'عميل دائم' },
-        { id: 'cust-2', name: 'فاطمة علي', phone: '01298765432', address: '456 شارع الحرية، الإسكندرية', email: 'fatima@email.com', notes: '' },
+        { id: 'cust-1', name: 'أحمد محمود', phone: '01012345678', address: '123 شارع النصر، القاهرة', email: 'ahmed@email.com', notes: 'عميل دائم', balance: 0 },
+        { id: 'cust-2', name: 'فاطمة علي', phone: '01298765432', address: '456 شارع الحرية، الإسكندرية', email: 'fatima@email.com', notes: '', balance: 0 },
     ];
 };
 
 const createInitialSuppliers = (): Supplier[] => {
     return [
-        { id: 'sup-1', name: 'دار الشروق', contactPerson: 'محمد علي', phone: '0223456789' },
-        { id: 'sup-2', name: 'دار المعارف', contactPerson: 'سارة حسن', phone: '0229876543' },
+        { id: 'sup-1', name: 'دار الشروق', contactPerson: 'محمد علي', phone: '0223456789', balance: 0 },
+        { id: 'sup-2', name: 'دار المعارف', contactPerson: 'سارة حسن', phone: '0229876543', balance: 0 },
     ];
 };
 
