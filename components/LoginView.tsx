@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { User, Lock, ArrowRight, Loader2, BookOpen } from 'lucide-react';
 
 interface LoginViewProps {
   onLogin: (username: string, password: string) => Promise<boolean>;
@@ -22,71 +24,107 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     if (!success) {
       setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
     }
-    // Note: Do not reset loading on success as the component will unmount.
     setIsLoading(false);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
-      <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-xl animate-[slide-up_0.3s_ease-out]">
-        <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-800">أهلاً بك</h1>
-            <p className="text-slate-500 mt-2">سجل الدخول للمتابعة إلى لوحة التحكم</p>
+    <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC] font-sans" dir="rtl">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(79,70,229,0.05),transparent)] pointer-events-none"></div>
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-sm"
+      >
+        <div className="text-center mb-10">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="w-20 h-20 bg-slate-900 rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6 relative group rotate-3 hover:rotate-0 transition-transform duration-500"
+            >
+                <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <BookOpen className="text-white relative z-10" size={40} />
+            </motion.div>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tighter mb-2">أهلاً بك</h1>
+            <p className="text-slate-500 font-medium">سجل الدخول للمتابعة إلى سوق الكتاب</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 pointer-events-none">
-              person
-            </span>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 pr-10 text-slate-700 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              placeholder="اسم المستخدم"
-              required
+
+        <div className="glass-panel p-8 shadow-2xl border border-white/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">اسم المستخدم</label>
+              <div className="relative group">
+                <User size={18} className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-5 py-4 pr-12 text-slate-700 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold"
+                  placeholder="أدخل اسمك هنا"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">كلمة المرور</label>
+              <div className="relative group">
+                <Lock size={18} className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-5 py-4 pr-12 text-slate-700 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold"
+                  placeholder="••••••••"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-red-50 text-red-500 text-xs font-bold p-3 rounded-lg text-center border border-red-100"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              type="submit"
               disabled={isLoading}
-            />
-          </div>
-          <div className="relative">
-             <span className="material-symbols-outlined absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 pointer-events-none">
-              lock
-            </span>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-10 text-slate-700 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              placeholder="كلمة المرور"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          {error && <p className="text-sm text-center text-red-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full px-4 py-3 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 flex items-center justify-center disabled:bg-indigo-400"
-          >
-            {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            ) : (
-                'تسجيل الدخول'
-            )}
-          </button>
-        </form>
-      </div>
-      <style>{`
-        @keyframes slide-up {
-          from { transform: translateY(20px) scale(0.98); opacity: 0; }
-          to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-      `}</style>
+              className="w-full h-14 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 disabled:bg-slate-400 disabled:shadow-none"
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                <>
+                  <span>تسجيل الدخول</span>
+                  <ArrowRight size={18} className="rotate-180" />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            © 2026 SOOQ ALKETAB • v2.0 Professional
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };

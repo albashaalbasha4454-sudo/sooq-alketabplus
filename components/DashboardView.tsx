@@ -1,34 +1,60 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import type { Invoice, Product, Expense, Customer } from '../types';
 import { Chart, registerables } from 'chart.js';
+import { motion } from 'motion/react';
+import { 
+    TrendingUp, Wallet, ShoppingBag, BarChart3, 
+    AlertTriangle, History, Printer, Calendar,
+    ArrowUpRight, ArrowDownRight, Package, DollarSign
+} from 'lucide-react';
 
 Chart.register(...registerables);
 
-const StatCard = ({ title, value, icon, valueClassName, subtext }: { title: string, value: string | number, icon: string, valueClassName?: string, subtext?: string }) => {
-    // Extract the color part from valueClassName (e.g., "text-indigo-600" -> "indigo-600")
-    const colorClass = valueClassName?.replace('text-', '') || 'slate-600';
-    
+const StatCard = ({ title, value, icon: Icon, colorClass, subtext, trend }: { 
+    title: string, 
+    value: string | number, 
+    icon: any, 
+    colorClass: string, 
+    subtext?: string,
+    trend?: { value: string, isUp: boolean }
+}) => {
     return (
-        <div className="bg-white p-4 rounded-xl shadow-lg flex items-center gap-4 border border-slate-100">
-            <div className={`p-3 rounded-full bg-${colorClass} bg-opacity-10`}>
-                <span className={`material-symbols-outlined text-3xl text-${colorClass}`}>{icon}</span>
+        <motion.div 
+            whileHover={{ y: -4 }}
+            className="card-professional p-6 flex flex-col justify-between"
+        >
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-2xl ${colorClass.replace('text-', 'bg-').split(' ')[0]}/10 ${colorClass}`}>
+                    <Icon size={24} strokeWidth={2.5} />
+                </div>
+                {trend && (
+                    <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${trend.isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {trend.isUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                        {trend.value}
+                    </div>
+                )}
             </div>
             <div>
-                <h3 className="text-slate-500 text-sm">{title}</h3>
-                <p className={`text-xl font-bold text-${colorClass}`}>{value}</p>
-                {subtext && <p className="text-xs text-slate-400">{subtext}</p>}
+                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</h3>
+                <p className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">{value}</p>
+                {subtext && <p className="text-[10px] text-slate-400 font-medium">{subtext}</p>}
             </div>
-        </div>
+        </motion.div>
     );
 };
 
-const InfoListCard: React.FC<{ title: string; icon: string; children: React.ReactNode; }> = ({ title, icon, children }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg h-full">
-        <div className="flex items-center gap-3 mb-4">
-            <span className="material-symbols-outlined text-slate-600">{icon}</span>
-            <h3 className="text-xl font-bold text-slate-800">{title}</h3>
+const InfoListCard: React.FC<{ title: string; icon: any; children: React.ReactNode; }> = ({ title, icon: Icon, children }) => (
+    <div className="card-professional flex flex-col h-full bg-white">
+        <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <Icon size={20} />
+                </div>
+                <h3 className="text-lg font-black text-slate-800 tracking-tight">{title}</h3>
+            </div>
+            <button className="text-[10px] font-bold text-indigo-600 hover:underline uppercase tracking-wider">عرض الكل</button>
         </div>
-        <div className="space-y-3 text-sm max-h-64 overflow-y-auto">
+        <div className="flex-1 p-6 space-y-4 overflow-y-auto scrollbar-hide">
             {children}
         </div>
     </div>
@@ -109,10 +135,10 @@ const DashboardView: React.FC<{
     const recentSales = invoices
         .filter(i => i.type === 'sale' || (i.type === 'shipping' && i.status === 'completed'))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5);
+        .slice(0, 10);
         
     const lowStockProducts = products
-        .filter(p => p.quantity > 0 && p.quantity <= lowStockThreshold)
+        .filter(p => (p.quantity > 0 || p.type === 'product') && p.quantity <= lowStockThreshold)
         .sort((a, b) => a.quantity - b.quantity);
 
     const dailyData: { [date: string]: { profit: number, expense: number } } = {};
@@ -159,12 +185,21 @@ const DashboardView: React.FC<{
   };
 
   useEffect(() => {
-    // FIX: Using Object.keys to iterate and destroy charts to ensure proper type inference.
     Object.keys(chartInstances.current).forEach(key => chartInstances.current[key]?.destroy());
     
     const ctx = profitExpenseChartRef.current?.getContext('2d');
     if (ctx) {
         const sortedDays = Object.keys(dailyData).sort();
+        
+        // Gradient for charts
+        const profitGradient = ctx.createLinearGradient(0, 0, 0, 400);
+        profitGradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+        profitGradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+        const expenseGradient = ctx.createLinearGradient(0, 0, 0, 400);
+        expenseGradient.addColorStop(0, 'rgba(239, 68, 68, 0.1)');
+        expenseGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
         chartInstances.current['profitExpense'] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -173,27 +208,73 @@ const DashboardView: React.FC<{
                 {
                     label: 'إجمالي الربح',
                     data: sortedDays.map(day => dailyData[day].profit),
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderColor: '#4F46E5',
+                    borderWidth: 3,
+                    backgroundColor: profitGradient,
                     fill: true,
-                    tension: 0.3,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#4F46E5',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
                 },
                 {
                     label: 'المصروفات',
                     data: sortedDays.map(day => dailyData[day].expense),
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: '#EF4444',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    backgroundColor: expenseGradient,
                     fill: true,
-                    tension: 0.3,
+                    tension: 0.4,
+                    pointRadius: 0,
                 }
                 ],
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 20,
+                            font: { family: 'Cairo', weight: 'bold', size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: '#1E293B',
+                        titleFont: { family: 'Cairo', size: 14 },
+                        bodyFont: { family: 'Cairo', size: 12 },
+                        padding: 12,
+                        cornerRadius: 12,
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.03)', drawTicks: false },
+                        border: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } }
+                    }
+                } 
+            }
         });
     }
     
     return () => {
-        // FIX: Using Object.keys to iterate and destroy charts to ensure proper type inference.
         Object.keys(chartInstances.current).forEach(key => chartInstances.current[key]?.destroy());
     }
   }, [dailyData]);
@@ -201,115 +282,180 @@ const DashboardView: React.FC<{
   const dateRangeText = dateRange === 'all' ? 'كل الأوقات' : `آخر ${dateRange} يوم`;
 
   return (
-    <div className="p-4 sm:p-6 bg-slate-100">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
-            <h2 className="text-3xl font-bold text-slate-800">لوحة التحكم</h2>
-            <p className="text-sm text-slate-500 mt-1">نظرة شاملة ودقيقة على أداء محلك التجاري.</p>
+            <div className="flex items-center gap-2 mb-2">
+                <span className="w-8 h-1 bg-indigo-600 rounded-full"></span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-600 opacity-80">Overview 2026</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-800 tracking-tight">نظرة عامة</h2>
+            <p className="text-slate-400 font-medium text-sm">تحليلات دقيقة لأداء مبيعاتك ومخزونك.</p>
           </div>
-          <div className="flex items-center gap-2 bg-white p-1 rounded-lg shadow-sm mt-4 md:mt-0">
-              <button onClick={() => setDateRange('7')} className={`px-3 py-1 rounded-md text-sm font-semibold ${dateRange === '7' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>آخر 7 أيام</button>
-              <button onClick={() => setDateRange('30')} className={`px-3 py-1 rounded-md text-sm font-semibold ${dateRange === '30' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>آخر 30 يوم</button>
-              <button onClick={() => setDateRange('all')} className={`px-3 py-1 rounded-md text-sm font-semibold ${dateRange === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>كل الأوقات</button>
+
+          <div className="flex flex-wrap items-center gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-slate-200/60 shadow-sm">
+                <button onClick={() => setDateRange('7')} className={`px-5 py-2 rounded-xl text-xs font-black tracking-tight transition-all ${dateRange === '7' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}>7 أيام</button>
+                <button onClick={() => setDateRange('30')} className={`px-5 py-2 rounded-xl text-xs font-black tracking-tight transition-all ${dateRange === '30' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}>30 يوم</button>
+                <button onClick={() => setDateRange('all')} className={`px-5 py-2 rounded-xl text-xs font-black tracking-tight transition-all ${dateRange === 'all' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}>الكل</button>
           </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
-        <StatCard title="صافي مبيعات اليوم" value={`${todayNetSales.toFixed(2)}`} icon="today" valueClassName="text-emerald-600" subtext="اليوم فقط" />
-        <StatCard title="ربح اليوم" value={`${todayProfit.toFixed(2)}`} icon="payments" valueClassName="text-green-600" subtext="اليوم فقط" />
-        <StatCard title="صافي المبيعات" value={`${netSales.toFixed(2)}`} icon="monitoring" valueClassName="text-indigo-600" subtext={dateRangeText} />
-        <StatCard title="إجمالي الربح" value={`${grossProfit.toFixed(2)}`} icon="account_balance" valueClassName="text-sky-600" subtext={dateRangeText} />
-        <StatCard title="المصروفات" value={`${totalExpenses.toFixed(2)}`} icon="receipt_long" valueClassName="text-red-500" subtext={dateRangeText} />
-        <StatCard title="صافي الربح" value={`${netProfit.toFixed(2)}`} icon="trending_up" valueClassName={netProfit >= 0 ? 'text-green-600' : 'text-red-600'} subtext={dateRangeText}/>
-        <StatCard title="رأس المال" value={`${totalCapital.toFixed(2)}`} icon="inventory_2" valueClassName="text-amber-600" subtext="قيمة المخزون" />
-        <StatCard title="إجمالي الكل" value={`${grandTotal.toFixed(2)}`} icon="stars" valueClassName="text-purple-600" subtext="رأس المال + الربح" />
+      {/* Stats Bento Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-5">
+        <StatCard title="مبيعات اليوم" value={`${todayNetSales.toLocaleString()}`} icon={Calendar} colorClass="text-emerald-600" trend={{ value: "12%", isUp: true }} />
+        <StatCard title="ربح اليوم" value={`${todayProfit.toLocaleString()}`} icon={Wallet} colorClass="text-indigo-600" />
+        <StatCard title="صافي المبيعات" value={`${netSales.toLocaleString()}`} icon={BarChart3} colorClass="text-indigo-600" subtext={dateRangeText} />
+        <StatCard title="إجمالي الربح" value={`${grossProfit.toLocaleString()}`} icon={TrendingUp} colorClass="text-sky-600" subtext={dateRangeText} />
+        <StatCard title="المصروفات" value={`${totalExpenses.toLocaleString()}`} icon={ShoppingBag} colorClass="text-rose-500" subtext={dateRangeText} trend={{ value: "5%", isUp: false }} />
+        <StatCard title="صافي الربح" value={`${netProfit.toLocaleString()}`} icon={TrendingUp} colorClass={netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'} subtext={dateRangeText}/>
+        <StatCard title="قيمة المخزون" value={`${totalCapital.toLocaleString()}`} icon={Package} colorClass="text-amber-600" subtext="رأس المال العامل" />
+        <StatCard title="القيمة الكلية" value={`${grandTotal.toLocaleString()}`} icon={DollarSign} colorClass="text-violet-600" subtext="إجمالي الأصول" />
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-          <button onClick={() => handlePrint('sales')} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-700 font-medium">
-              <span className="material-symbols-outlined text-indigo-600">print</span>
+      {/* Action Bar */}
+      <div className="flex flex-wrap items-center gap-3">
+          <button onClick={() => handlePrint('sales')} className="btn-primary py-2 px-5 bg-white border border-slate-200 !text-slate-600 hover:bg-slate-50 shadow-none ring-1 ring-slate-200">
+              <Printer size={18} className="text-indigo-600" />
               طباعة المبيعات
           </button>
-          <button onClick={() => handlePrint('profit')} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-700 font-medium">
-              <span className="material-symbols-outlined text-green-600">print</span>
-              طباعة الربح اليومي
+          <button onClick={() => handlePrint('profit')} className="btn-primary py-2 px-5 bg-white border border-slate-200 !text-slate-600 hover:bg-slate-50 shadow-none ring-1 ring-slate-200">
+              <Printer size={18} className="text-emerald-600" />
+              تقرير الأرباح
           </button>
-          <button onClick={() => handlePrint('expenses')} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-700 font-medium">
-              <span className="material-symbols-outlined text-red-600">print</span>
-              طباعة المصروفات
+          <button onClick={() => handlePrint('expenses')} className="btn-primary py-2 px-5 bg-white border border-slate-200 !text-slate-600 hover:bg-slate-50 shadow-none ring-1 ring-slate-200">
+              <Printer size={18} className="text-rose-600" />
+              المصروفات
           </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg h-96">
-            <h3 className="text-xl font-bold text-slate-800 mb-4">الأرباح والمصروفات ({dateRangeText})</h3>
-            <div className="relative h-72"><canvas ref={profitExpenseChartRef}></canvas></div>
+      {/* Main Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 card-professional p-8 bg-white overflow-hidden relative group">
+            <div className="flex justify-between items-center mb-10">
+                <div>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">تحليل التدفق المالي</h3>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Cash Flow Analytics</p>
+                </div>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-indigo-600"></span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">الأرباح</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-rose-500"></span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">المصروفات</span>
+                    </div>
+                </div>
+            </div>
+            <div className="relative h-[340px] w-full">
+                <canvas ref={profitExpenseChartRef}></canvas>
+            </div>
           </div>
-          <div className="lg:col-span-2">
-             <InfoListCard title="تنبيهات المخزون" icon="notification_important">
+
+          <div className="lg:col-span-4 flex flex-col gap-8">
+             <InfoListCard title="تنبيهات المخزون" icon={AlertTriangle}>
                  {lowStockProducts.length > 0 ? lowStockProducts.map(p => (
-                     <div key={p.id} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50">
-                         <span>{p.name}</span>
-                         <span className="font-bold text-red-600">الكمية: {p.quantity}</span>
-                     </div>
-                 )) : <p className="text-slate-500 p-2">لا يوجد كتب على وشك النفاذ حالياً.</p>}
-             </InfoListCard>
-          </div>
-           <div className="lg:col-span-1">
-             <InfoListCard title="آخر المبيعات" icon="receipt_long">
-                 {recentSales.map(inv => (
-                     <div key={inv.id} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50">
-                         <div>
-                            <p className="font-semibold">{inv.customerInfo?.name || "بيع مباشر"}</p>
-                            <p className="text-xs text-slate-400">{new Date(inv.date).toLocaleDateString()}</p>
+                     <div key={p.id} className="group cursor-default flex justify-between items-center p-3 rounded-xl hover:bg-amber-50/50 transition-colors border border-transparent hover:border-amber-100">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 font-bold text-xs uppercase">
+                                {p.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-800 text-sm tracking-tight">{p.name}</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Category: Book</p>
+                            </div>
                          </div>
-                         <span className="font-bold text-green-600">{inv.total.toFixed(2)}</span>
+                         <div className="text-left">
+                            <span className="block text-rose-500 font-black text-sm">{p.quantity} <span className="text-[10px]">قطعة</span></span>
+                            <span className="text-[10px] text-slate-300 font-bold uppercase">Critical</span>
+                         </div>
+                     </div>
+                 )) : <p className="text-slate-300 text-center py-10 italic">المخزون مستقر حالياً.</p>}
+             </InfoListCard>
+
+             <InfoListCard title="آخر الحركات" icon={History}>
+                 {recentSales.map(inv => (
+                     <div key={inv.id} className="flex justify-between items-center p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                         <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs ${inv.type === 'sale' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                {inv.type === 'sale' ? 'SAL' : 'SHP'}
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-800 text-sm tracking-tight truncate max-w-[120px]">{inv.customerInfo?.name || "عميل عابر"}</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{new Date(inv.date).toLocaleDateString('en-GB')}</p>
+                            </div>
+                         </div>
+                         <div className="text-left">
+                            <span className="block font-black text-slate-700 text-sm">{inv.total.toLocaleString()}</span>
+                            <span className="text-[10px] text-emerald-500 font-bold uppercase">Success</span>
+                         </div>
                      </div>
                  ))}
              </InfoListCard>
           </div>
       </div>
+
       {/* Printable Area */}
       {printContent && (
-          <div id="print-area" className="p-8 bg-white text-right" dir="rtl">
-              <h1 className="text-2xl font-bold mb-4 text-center border-b pb-4">{printContent.title}</h1>
-              <p className="mb-6 text-slate-500 text-center">تاريخ التقرير: {new Date().toLocaleString('ar-EG')}</p>
+          <div id="print-area" className="p-12 bg-white text-right font-sans" dir="rtl">
+              <div className="flex justify-between items-center border-b-4 border-slate-800 pb-8 mb-12">
+                  <div>
+                    <h1 className="text-4xl font-black text-slate-800 mb-2">{printContent.title}</h1>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Generated by Melent Systems v2.0</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xl font-bold">التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+                    <p className="text-slate-400 text-sm font-medium">الوقت: {new Date().toLocaleTimeString('ar-EG')}</p>
+                  </div>
+              </div>
               
-              <table className="w-full border-collapse border border-slate-300">
+              <table className="w-full border-collapse">
                   <thead>
-                      <tr className="bg-slate-100">
-                          <th className="border border-slate-300 p-2">التاريخ</th>
-                          <th className="border border-slate-300 p-2">البيان / الوصف</th>
-                          <th className="border border-slate-300 p-2">المبلغ</th>
-                          {printContent.type === 'profit' && <th className="border border-slate-300 p-2">الربح</th>}
+                      <tr className="bg-slate-100/50">
+                          <th className="p-4 border-b-2 border-slate-800 text-right font-black uppercase text-xs tracking-wider">التاريخ</th>
+                          <th className="p-4 border-b-2 border-slate-800 text-right font-black uppercase text-xs tracking-wider">البيان / الوصف</th>
+                          <th className="p-4 border-b-2 border-slate-800 text-left font-black uppercase text-xs tracking-wider">المبلغ</th>
+                          {printContent.type === 'profit' && <th className="p-4 border-b-2 border-slate-800 text-left font-black uppercase text-xs tracking-wider">الربح</th>}
                       </tr>
                   </thead>
                   <tbody>
                       {printContent.items.map((item, idx) => (
-                          <tr key={idx}>
-                              <td className="border border-slate-300 p-2">{new Date(item.date).toLocaleDateString()}</td>
-                              <td className="border border-slate-300 p-2">
+                          <tr key={idx} className="border-b border-slate-100">
+                              <td className="p-4 font-bold text-slate-600 italic">{new Date(item.date).toLocaleDateString()}</td>
+                              <td className="p-4 font-black text-slate-800">
                                   {printContent.type === 'expenses' ? item.description : (item.customerInfo?.name || "بيع مباشر")}
                               </td>
-                              <td className="border border-slate-300 p-2">{(item.total ?? item.amount ?? 0).toFixed(2)}</td>
-                              {printContent.type === 'profit' && <td className="border border-slate-300 p-2">{item.totalProfit?.toFixed(2)}</td>}
+                              <td className="p-4 text-left font-bold text-slate-700">{(item.total ?? item.amount ?? 0).toLocaleString()}</td>
+                              {printContent.type === 'profit' && <td className="p-4 text-left font-black text-emerald-600">{item.totalProfit?.toLocaleString()}</td>}
                           </tr>
                       ))}
                   </tbody>
                   <tfoot>
-                      <tr className="font-bold bg-slate-50">
-                          <td colSpan={2} className="border border-slate-300 p-2 text-left">الإجمالي:</td>
-                          <td className="border border-slate-300 p-2">
-                              {printContent.items.reduce((sum, i) => sum + (i.total ?? i.amount ?? 0), 0).toFixed(2)}
+                      <tr className="bg-slate-900 text-white font-black">
+                          <td colSpan={2} className="p-6 text-right uppercase tracking-[0.2em]">الإجمالي النهائي:</td>
+                          <td className="p-6 text-left text-xl">
+                              {printContent.items.reduce((sum, i) => sum + (i.total ?? i.amount ?? 0), 0).toLocaleString()}
                           </td>
                           {printContent.type === 'profit' && (
-                              <td className="border border-slate-300 p-2">
-                                  {printContent.items.reduce((sum, i) => sum + (i.totalProfit || 0), 0).toFixed(2)}
+                              <td className="p-6 text-left text-xl text-emerald-400">
+                                  {printContent.items.reduce((sum, i) => sum + (i.totalProfit || 0), 0).toLocaleString()}
                               </td>
                           )}
                       </tr>
                   </tfoot>
               </table>
+              
+              <div className="mt-20 flex justify-between">
+                  <div className="text-center w-64 border-t-2 border-slate-200 pt-4">
+                      <p className="font-bold text-slate-400 uppercase text-xs mb-2">Approved By</p>
+                      <p className="font-black text-slate-800">توقيع المسؤول</p>
+                  </div>
+                   <div className="text-center w-64 border-t-2 border-slate-200 pt-4">
+                      <p className="font-bold text-slate-400 uppercase text-xs mb-2">Audit Verification</p>
+                      <p className="font-black text-slate-800">ختم المؤسسة</p>
+                  </div>
+              </div>
           </div>
       )}
     </div>

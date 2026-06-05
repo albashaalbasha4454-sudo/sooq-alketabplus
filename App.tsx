@@ -33,6 +33,17 @@ import { RecycleBinView } from './components/RecycleBinView';
 
 
 import { logAction } from './utils/auditLogger';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+    LayoutDashboard, LineChart, ClipboardList, ShoppingCart, 
+    Receipt, ShieldCheck, Package, ListChecks, 
+    ShoppingBag, Wallet, Users, Building2, 
+    Landmark, Archive, UserCog, HardDriveDownload, 
+    ScrollText, Trash2, Database, Settings, 
+    ChevronLeft, LogOut, Search, Bell,
+    Menu, X, Sparkles, ChevronRight
+} from 'lucide-react';
+import { Logo } from './components/Logo';
 import { softDelete } from './utils/recycleBin';
 
 const simpleHash = (password: string, salt: string) => `hashed_${password}_with_${salt}`;
@@ -523,67 +534,126 @@ const App: React.FC = () => {
         return <LoginView onLogin={login} />;
     }
 
-    const views: { [key: string]: {element: React.ReactNode, label: string, icon: string, roles: Array<'admin' | 'cashier'>} } = {
-        dashboard: { element: <DashboardView invoices={invoices} expenses={expenses} products={products} customers={customers} lowStockThreshold={lowStockThreshold} />, label: "لوحة التحكم", icon: "dashboard", roles: ['admin'] },
-        reports: { element: <ReportsView invoices={invoices} products={products} expenses={expenses} />, label: "التقارير", icon: "analytics", roles: ['admin'] },
-        financialSummary: { element: <FinancialSummaryView invoices={invoices} expenses={expenses} transactions={transactions} purchases={purchases} accountBalances={accountBalances} />, label: "الملخص المالي", icon: "summarize", roles: ['admin'] },
-        pos: { element: <POSView products={products} customers={customers} onCompleteSale={onCompleteSale} onCreateShippingOrder={onCreateShippingOrder} onCreateReservation={onCreateReservation} onAddRequestedBook={onAddRequestedBook} lowStockThreshold={lowStockThreshold} />, label: "نقطة البيع", icon: "point_of_sale", roles: ['admin', 'cashier'] },
-        orders: { element: <OrdersView invoices={invoices} users={users} onUpdateStatus={updateOrderStatus} onConvertToSale={onConvertToSale} processReturn={processReturn} sendReturnRequest={sendReturnRequest} currentUser={currentUser} shopName={shopName} shopAddress={shopAddress} />, label: "الطلبات", icon: "receipt_long", roles: ['admin', 'cashier'] },
-        returnRequests: { element: <ReturnRequestsView requests={returnRequests} approveRequest={approveRequest} rejectRequest={rejectRequest} />, label: "طلبات الإرجاع", icon: "rule", roles: ['admin'] },
-        products: { element: <ProductsView products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} lowStockThreshold={lowStockThreshold} onBatchUpdate={batchUpdateProducts} />, label: "المخزون", icon: "inventory_2", roles: ['admin'] },
-        requestedBooks: { element: <RequestedBooksView requestedBooks={requestedBooks} updateRequestedBookStatus={updateRequestedBookStatus} />, label: "المنتجات المطلوبة", icon: "checklist", roles: ['admin'] },
-        purchases: { element: <PurchasesView purchases={purchases} products={products} suppliers={suppliers} accounts={accounts} accountBalances={accountBalances} onAddPurchase={onAddPurchase} onUpdatePurchase={onUpdatePurchase} onDeletePurchase={onDeletePurchase} onAddSupplier={onAddSupplier} onAddPayment={addPurchasePayment} createProduct={addProduct} updateProduct={updateProduct} />, label: "المشتريات", icon: "shopping_bag", roles: ['admin'] },
-        expenses: { element: <ExpensesView expenses={expenses} addExpense={addExpense} accounts={accounts} />, label: "المصروفات", icon: "payments", roles: ['admin'] },
-        customers: { element: <CustomersView customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} />, label: "العملاء", icon: "groups", roles: ['admin'] },
-        suppliers: { element: <SuppliersView suppliers={suppliers} addSupplier={onAddSupplier} updateSupplier={updateSupplier} deleteSupplier={deleteSupplier} />, label: "الموردون", icon: "store", roles: ['admin'] },
-        finance: { element: <FinanceView accounts={accounts} accountBalances={accountBalances} transactions={transactions} budgets={budgets} onSaveAccount={onSaveAccount} onSaveTransaction={addFinancialTransaction} onSaveBudget={(b) => setBudgets(p=>[...p, {...b, id: `budget-${Date.now()}`}])} />, label: "الخزينة", icon: "account_balance", roles: ['admin'] },
-        tillCloseouts: { element: <TillCloseoutsView tillCloseouts={tillCloseouts} />, label: "تقارير الصناديق", icon: "archive", roles: ['admin'] },
-        users: { element: <UsersView users={users} addUser={addUser} updateUser={updateUser} deleteUser={deleteUser} currentUser={currentUser} />, label: "المستخدمون", icon: "manage_accounts", roles: ['admin'] },
-        backups: { element: <BackupAndArchiveView />, label: "النسخ الاحتياطي", icon: "backup", roles: ['admin'] },
-        auditLogs: { element: <AuditLogView />, label: "سجل التدقيق", icon: "history_edu", roles: ['admin'] },
-        recycleBin: { element: <RecycleBinView />, label: "سلة المهملات", icon: "auto_delete", roles: ['admin'] },
-        cashierTools: { element: <CashierToolsView currentUser={currentUser} />, label: "إدارة البيانات", icon: "database", roles: ['cashier'] },
-        settings: { element: <SettingsView onUpdatePrices={updatePricesBatch} onOpenReset={() => setIsResetModalOpen(true)} />, label: "الإعدادات", icon: "settings", roles: ['admin'] },
+    const views: { [key: string]: {element: React.ReactNode, label: string, icon: any, roles: Array<'admin' | 'cashier'>} } = {
+        dashboard: { element: <DashboardView invoices={invoices} expenses={expenses} products={products} customers={customers} lowStockThreshold={lowStockThreshold} />, label: "لوحة التحكم", icon: LayoutDashboard, roles: ['admin'] },
+        reports: { element: <ReportsView invoices={invoices} products={products} expenses={expenses} />, label: "التقارير", icon: LineChart, roles: ['admin'] },
+        financialSummary: { element: <FinancialSummaryView invoices={invoices} expenses={expenses} transactions={transactions} purchases={purchases} accountBalances={accountBalances} />, label: "الملخص المالي", icon: ClipboardList, roles: ['admin'] },
+        pos: { element: <POSView products={products} customers={customers} onCompleteSale={onCompleteSale} onCreateShippingOrder={onCreateShippingOrder} onCreateReservation={onCreateReservation} onAddRequestedBook={onAddRequestedBook} lowStockThreshold={lowStockThreshold} />, label: "نقطة البيع", icon: ShoppingCart, roles: ['admin', 'cashier'] },
+        orders: { element: <OrdersView invoices={invoices} users={users} onUpdateStatus={updateOrderStatus} onConvertToSale={onConvertToSale} processReturn={processReturn} sendReturnRequest={sendReturnRequest} currentUser={currentUser} shopName={shopName} shopAddress={shopAddress} />, label: "الطلبات", icon: Receipt, roles: ['admin', 'cashier'] },
+        returnRequests: { element: <ReturnRequestsView requests={returnRequests} approveRequest={approveRequest} rejectRequest={rejectRequest} />, label: "طلبات الإرجاع", icon: ShieldCheck, roles: ['admin'] },
+        products: { element: <ProductsView products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} lowStockThreshold={lowStockThreshold} onBatchUpdate={batchUpdateProducts} />, label: "المخزون", icon: Package, roles: ['admin'] },
+        requestedBooks: { element: <RequestedBooksView requestedBooks={requestedBooks} updateRequestedBookStatus={updateRequestedBookStatus} />, label: "المنتجات المطلوبة", icon: ListChecks, roles: ['admin'] },
+        purchases: { element: <PurchasesView purchases={purchases} products={products} suppliers={suppliers} accounts={accounts} accountBalances={accountBalances} onAddPurchase={onAddPurchase} onUpdatePurchase={onUpdatePurchase} onDeletePurchase={onDeletePurchase} onAddSupplier={onAddSupplier} onAddPayment={addPurchasePayment} createProduct={addProduct} updateProduct={updateProduct} />, label: "المشتريات", icon: ShoppingBag, roles: ['admin'] },
+        expenses: { element: <ExpensesView expenses={expenses} addExpense={addExpense} accounts={accounts} />, label: "المصروفات", icon: Wallet, roles: ['admin'] },
+        customers: { element: <CustomersView customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} />, label: "العملاء", icon: Users, roles: ['admin'] },
+        suppliers: { element: <SuppliersView suppliers={suppliers} addSupplier={onAddSupplier} updateSupplier={updateSupplier} deleteSupplier={deleteSupplier} />, label: "الموردون", icon: Building2, roles: ['admin'] },
+        finance: { element: <FinanceView accounts={accounts} accountBalances={accountBalances} transactions={transactions} budgets={budgets} onSaveAccount={onSaveAccount} onSaveTransaction={addFinancialTransaction} onSaveBudget={(b) => setBudgets(p=>[...p, {...b, id: `budget-${Date.now()}`}])} />, label: "الخزينة", icon: Landmark, roles: ['admin'] },
+        tillCloseouts: { element: <TillCloseoutsView tillCloseouts={tillCloseouts} />, label: "تقارير الصناديق", icon: Archive, roles: ['admin'] },
+        users: { element: <UsersView users={users} addUser={addUser} updateUser={updateUser} deleteUser={deleteUser} currentUser={currentUser} />, label: "المستخدمون", icon: UserCog, roles: ['admin'] },
+        backups: { element: <BackupAndArchiveView />, label: "النسخ الاحتياطي", icon: HardDriveDownload, roles: ['admin'] },
+        auditLogs: { element: <AuditLogView />, label: "سجل التدقيق", icon: ScrollText, roles: ['admin'] },
+        recycleBin: { element: <RecycleBinView />, label: "سلة المهملات", icon: Trash2, roles: ['admin'] },
+        cashierTools: { element: <CashierToolsView currentUser={currentUser} />, label: "إدارة البيانات", icon: Database, roles: ['cashier'] },
+        settings: { element: <SettingsView onUpdatePrices={updatePricesBatch} onOpenReset={() => setIsResetModalOpen(true)} />, label: "الإعدادات", icon: Settings, roles: ['admin'] },
     };
 
     const SidebarLink: React.FC<{viewKey: string}> = ({viewKey}) => {
         const view = views[viewKey];
         if (!view || !view.roles.includes(currentUser.role)) return null;
+        const isActive = currentView === viewKey;
+        const ViewIcon = view.icon;
+        
         return (
-            <button onClick={() => { setCurrentView(viewKey); setIsSidebarOpen(false); }} className={`w-full text-right flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${currentView === viewKey ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}>
-                <span className="material-symbols-outlined">{view.icon}</span>
-                <span>{view.label}</span>
+            <button 
+                onClick={() => { setCurrentView(viewKey); setIsSidebarOpen(false); }} 
+                className={`w-full text-right flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${
+                    isActive 
+                    ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' 
+                    : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'
+                }`}
+            >
+                {isActive && (
+                    <motion.div 
+                        layoutId="activeGlow"
+                        className="absolute inset-0 bg-indigo-600 rounded-xl blur-[2px] opacity-20 -z-10"
+                    />
+                )}
+                <ViewIcon size={18} strokeWidth={isActive ? 3 : 2} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:translate-x-1'}`} />
+                <span className="text-sm font-black tracking-tight uppercase tracking-widest">{view.label}</span>
+                {isActive && (
+                    <motion.div 
+                        layoutId="activeTab"
+                        className="mr-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm"
+                    />
+                )}
             </button>
         );
     };
-    
-    const adminSidebarOrder = ['dashboard', 'reports', 'financialSummary', 'pos', 'orders', 'returnRequests', 'products', 'requestedBooks', 'purchases', 'expenses', 'customers', 'suppliers', 'finance', 'tillCloseouts', 'users', 'backups', 'auditLogs', 'recycleBin', 'settings'];
-    const cashierSidebarOrder = ['pos', 'orders', 'cashierTools'];
 
+    const adminSidebarOrder = [
+        'dashboard', 'pos', 'orders', 'purchases', 'finance', 'products', 
+        'reports', 'financialSummary', 'returnRequests', 'requestedBooks', 
+        'expenses', 'customers', 'suppliers', 'tillCloseouts', 'users', 
+        'backups', 'auditLogs', 'recycleBin', 'settings'
+    ];
+    const cashierSidebarOrder = ['pos', 'orders', 'cashierTools'];
     const sidebarOrder = currentUser.role === 'admin' ? adminSidebarOrder : cashierSidebarOrder;
 
-
     return (
-        <div className="flex h-screen bg-gray-100" dir="rtl">
-            <aside className={`bg-gray-50 border-l border-gray-200 h-full transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out w-64 fixed md:static right-0 z-30 md:flex-shrink-0`}>
-                 <div className="p-4">
-                    <h2 className="text-2xl font-bold text-indigo-700 text-center">المكتبة</h2>
+        <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans" dir="rtl">
+            <aside className={`glass-panel border-l border-slate-200/50 h-full transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[110%]'} md:translate-x-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) w-72 fixed md:static right-0 z-50 md:flex-shrink-0 flex flex-col shadow-2xl md:shadow-none`}>
+                <div className="p-8 pb-4 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white mb-4 rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <Logo className="w-12 h-12" />
+                    </div>
+                    <h2 className="text-xl font-extrabold text-slate-800 tracking-tighter">سوق الكتاب</h2>
+                    <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-[0.3em] opacity-60">Control Panel</p>
                 </div>
-                <nav className="p-4 space-y-2">
-                    {sidebarOrder.map(key => <SidebarLink key={key} viewKey={key} />)}
-                </nav>
-            </aside>
-             {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"></div>}
+                
+                <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide">
+                    <div className="space-y-1">
+                        {sidebarOrder.map(key => <SidebarLink key={key} viewKey={key} />)}
+                    </div>
+                </div>
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200">
+                            {currentUser.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{currentUser.username}</p>
+                            <p className="text-[10px] text-slate-400 font-bold truncate uppercase">{currentUser.role === 'admin' ? 'المدير' : 'موظف'}</p>
+                        </div>
+                        <button 
+                            onClick={logout}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                            <LogOut size={20} />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {isSidebarOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"></motion.div>}
+
+            <div className="flex-1 flex flex-col overflow-hidden relative">
                 <Header 
                     currentUser={currentUser} 
                     onLogout={logout} 
                     toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                     onOpenCloseTillModal={() => setIsCloseTillModalOpen(true)}
                 />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-                    {views[currentView]?.element || views[currentUser.role === 'admin' ? 'dashboard' : 'pos'].element}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto relative scroll-smooth">
+                    <motion.div
+                        key={currentView}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="p-8 max-w-[1600px] mx-auto min-h-full pb-24"
+                    >
+                        {views[currentView]?.element || views[currentUser.role === 'admin' ? 'dashboard' : 'pos'].element}
+                    </motion.div>
                 </main>
             </div>
             {currentUser.role === 'admin' && 

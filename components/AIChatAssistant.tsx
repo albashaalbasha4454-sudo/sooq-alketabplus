@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, FunctionDeclaration, Type, Chat, Part } from '@google/genai';
+import { Sparkles } from 'lucide-react';
 import type { Product, Invoice, Expense, Customer, InvoiceItem } from '../types';
 
 interface AIChatAssistantProps {
@@ -82,7 +83,7 @@ const ChatInput: React.FC<{ onSend: (text: string) => void, isLoading: boolean }
           disabled={isLoading || !text.trim()}
           aria-label="إرسال"
         >
-          <span className="material-symbols-outlined">send</span>
+          <Sparkles className="w-5 h-5" />
         </button>
       </div>
     </form>
@@ -287,10 +288,17 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
     setError(null);
 
     try {
-      if (!process.env.API_KEY) {
+      if (!process.env.GEMINI_API_KEY) {
         throw new Error("API key is not configured.");
       }
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ 
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
 
       if (!chatRef.current) {
         const systemInstruction = `
@@ -310,7 +318,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
           - للبحث عن عنصر (كتاب, مصروف, عميل) لتعديله أو حذفه، استخدم البيانات المتاحة في السياق. إذا لم تجده، أخبر المستخدم بذلك.
         `;
         chatRef.current = ai.chats.create({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash',
           config: {
             systemInstruction: systemInstruction,
             tools: [{ functionDeclarations: [
@@ -462,7 +470,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
         <div className="fixed bottom-24 end-4 w-full max-w-md h-[70vh] max-h-[600px] bg-white rounded-lg shadow-2xl z-50 flex flex-col transition-transform transform-gpu animate-[slide-up_0.3s_ease-out]">
           <header className="flex items-center gap-3 justify-between p-4 bg-slate-900 text-white rounded-t-lg flex-shrink-0">
             <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-indigo-400">auto_awesome</span>
+                <Sparkles className="w-5 h-5 text-indigo-400" />
                 <h3 className="font-bold text-lg">المساعد الذكي للأعمال</h3>
             </div>
             <button onClick={() => setIsOpen(false)} className="hover:bg-slate-700 rounded-full p-1 transition-colors" aria-label="إغلاق">
@@ -472,7 +480,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
           <div ref={chatContainerRef} className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-100">
             {messages.length === 0 && !isLoading && (
                  <div className="text-center p-4 text-slate-500 animate-[fade-in_0.5s_ease-out]">
-                    <span className="material-symbols-outlined text-5xl text-slate-400">insights</span>
+                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Sparkles className="w-8 h-8 text-indigo-600" />
+                    </div>
                     <h4 className="font-semibold mt-2 text-slate-700">مساعد الأعمال الذكي</h4>
                     <p className="text-sm mt-1">اطرح أسئلة حول بياناتك أو أصدر أوامر مباشرة.</p>
                     <div className="text-xs mt-4 space-y-2 text-left bg-white p-3 rounded-lg border">
@@ -518,7 +528,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
         className="fixed bottom-6 end-6 w-16 h-16 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-indigo-700 transition-all transform hover:scale-110"
         aria-label="افتح المساعد الذكي"
       >
-        <span className="material-symbols-outlined text-3xl">auto_awesome</span>
+        <Sparkles className="w-8 h-8" />
       </button>
       <style>{`
         @keyframes slide-up {

@@ -4,6 +4,12 @@ import PrintInvoice from '../PrintInvoice';
 import ReturnModal from './ReturnModal';
 import RequestReturnModal from './RequestReturnModal';
 import Pagination from './common/Pagination';
+import { 
+    FileText, Search, Filter, Printer, 
+    RotateCcw, Inbox, ArrowUpRight, 
+    Calendar, User as UserIcon, Hash
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface InvoicesViewProps {
   invoices: Invoice[];
@@ -31,7 +37,6 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({ invoices, processReturn, se
 
   const filteredInvoices = useMemo(() => {
     return sortedInvoices.filter(inv => {
-      // FIX: Property 'customerName' does not exist on type 'Invoice'. Use 'customerInfo.name' instead.
       const matchesSearch = inv.id.includes(searchTerm) || inv.customerInfo?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || inv.type === filterType;
       return matchesSearch && matchesType;
@@ -56,109 +61,184 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({ invoices, processReturn, se
   };
 
   const getInvoiceTypeStyle = (type: Invoice['type']) => {
-    // FIX: 'purchase' is not a valid OrderType and was removed.
-    const styles: Record<Invoice['type'], {label: string, className: string}> = {
-        sale: { label: 'بيع', className: 'bg-green-100 text-green-800'},
-        return: { label: 'إرجاع', className: 'bg-red-100 text-red-800'},
-        shipping: { label: 'شحن', className: 'bg-sky-100 text-sky-800'},
-        reservation: { label: 'حجز', className: 'bg-indigo-100 text-indigo-800'}
+    const styles: Record<Invoice['type'], {label: string, className: string, icon: any}> = {
+        sale: { label: 'بيع نقدي', className: 'bg-emerald-50 text-emerald-600 border-emerald-100', icon: ArrowUpRight},
+        return: { label: 'مرتجع', className: 'bg-rose-50 text-rose-600 border-rose-100', icon: RotateCcw},
+        shipping: { label: 'شحن خارجي', className: 'bg-sky-50 text-sky-600 border-sky-100', icon: FileText},
+        reservation: { label: 'حجز مسبق', className: 'bg-amber-50 text-amber-600 border-amber-100', icon: Inbox}
     };
-    return styles[type] || {label: type, className: 'bg-slate-100 text-slate-800'};
+    return styles[type] || {label: type, className: 'bg-slate-50 text-slate-600 border-slate-100', icon: FileText};
   }
 
   return (
-    <div className="p-6">
-      <div className="bg-white shadow-lg rounded-xl">
-        <div className="p-6 border-b border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-800">سجل الفواتير</h2>
-            <p className="text-sm text-slate-500 mt-1">عرض وتصفح جميع الفواتير الصادرة والواردة.</p>
-        </div>
-        <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <input
-            type="text"
-            placeholder="ابحث برقم الفاتورة أو اسم العميل..."
-            value={searchTerm}
-            onChange={e => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full md:w-1/2 p-2 border border-slate-300 rounded-lg"
-          />
-          <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full md:w-1/4 p-2 border border-slate-300 rounded-lg bg-white">
-            <option value="all">كل الأنواع</option>
-            <option value="sale">بيع</option>
-            <option value="return">إرجاع</option>
-            <option value="shipping">شحن</option>
-            <option value="reservation">حجز</option>
-          </select>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full table-auto text-right">
-            <thead className="bg-slate-50 text-slate-600 uppercase text-sm">
-              <tr>
-                <th className="py-3 px-6">رقم الفاتورة</th>
-                <th className="py-3 px-6">التاريخ</th>
-                <th className="py-3 px-6">العميل</th>
-                <th className="py-3 px-6 text-center">النوع</th>
-                <th className="py-3 px-6">الإجمالي</th>
-                <th className="py-3 px-6 text-center">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-700 text-sm">
-              {paginatedInvoices.map((invoice) => {
-                  const typeStyle = getInvoiceTypeStyle(invoice.type);
-                  return (
-                    <tr key={invoice.id} className="border-b border-slate-200 hover:bg-slate-50">
-                        <td className="py-3 px-6 font-mono text-xs">{invoice.id.substring(0, 8)}</td>
-                        <td className="py-3 px-6">{new Date(invoice.date).toLocaleString('ar-EG')}</td>
-                        {/* FIX: Property 'customerName' does not exist on type 'Invoice'. Use 'customerInfo.name' instead. */}
-                        <td className="py-3 px-6">{invoice.customerInfo?.name || '-'}</td>
-                        <td className="py-3 px-6 text-center">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${typeStyle.className}`}>
-                                {typeStyle.label}
-                            </span>
-                        </td>
-                        <td className="py-3 px-6 font-bold">{invoice.total.toFixed(2)}</td>
-                        <td className="py-3 px-6 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                                <button onClick={() => setInvoiceToPrint(invoice)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-green-600 transition-colors" title="طباعة">
-                                    <span className="material-symbols-outlined text-lg">print</span>
-                                </button>
-                                {invoice.type === 'sale' && (
-                                    currentUser.role === 'admin' ? (
-                                    <button onClick={() => setInvoiceToReturn(invoice)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-red-600 transition-colors" title="إرجاع">
-                                        <span className="material-symbols-outlined text-lg">assignment_return</span>
-                                    </button>
-                                    ) : (
-                                    <button onClick={() => setInvoiceToRequestReturn(invoice)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-orange-600 transition-colors" title="طلب إرجاع">
-                                        <span className="material-symbols-outlined text-lg">forward_to_inbox</span>
-                                    </button>
-                                    )
-                                )}
-                            </div>
-                        </td>
-                    </tr>
-                  )
-              })}
-            </tbody>
-          </table>
-          {filteredInvoices.length === 0 && <p className="text-center py-8 text-slate-500">لا يوجد فواتير لعرضها.</p>}
-        </div>
-        <div className="p-6 border-t border-slate-200">
-             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              itemsPerPage={ITEMS_PER_PAGE}
-              totalItems={filteredInvoices.length}
-            />
-        </div>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+                <span className="w-8 h-1 bg-indigo-600 rounded-full"></span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-600 opacity-80">Ledger & History</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-800 tracking-tight">سجل الفواتير</h2>
+            <p className="text-slate-400 font-medium text-sm">أرشيف كامل لجميع العمليات المالية والحركات التجارية.</p>
+          </div>
       </div>
 
-      {invoiceToPrint && <PrintInvoice invoice={invoiceToPrint} onClose={() => setInvoiceToPrint(null)} shopName={shopName} shopAddress={shopAddress} />}
-      {invoiceToReturn && <ReturnModal invoice={invoiceToReturn} onClose={() => setInvoiceToReturn(null)} onProcessReturn={handleProcessReturn} />}
-      {invoiceToRequestReturn && <RequestReturnModal invoice={invoiceToRequestReturn} onClose={() => setInvoiceToRequestReturn(null)} onSendRequest={handleSendReturnRequest} />}
+      <div className="card-professional bg-white overflow-hidden">
+          {/* Controls Bar */}
+          <div className="p-6 lg:p-8 flex flex-col lg:flex-row justify-between items-center gap-6 border-b border-slate-50 overflow-visible">
+            <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="relative group flex-1 lg:w-96">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
+                        value={searchTerm} 
+                        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
+                        className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3 pr-12 pl-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                    />
+                </div>
+                
+                <div className="relative group">
+                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+                    <select 
+                        value={filterType} 
+                        onChange={e => setFilterType(e.target.value)} 
+                        className="appearance-none bg-slate-50/50 border border-slate-200 rounded-xl py-3 pr-10 pl-6 text-xs font-black uppercase tracking-widest text-slate-500 hover:border-slate-300 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer"
+                    >
+                        <option value="all">كل العمليات</option>
+                        <option value="sale">المبيعات</option>
+                        <option value="return">المرتجعات</option>
+                        <option value="shipping">الشحن</option>
+                        <option value="reservation">الحجوزات</option>
+                    </select>
+                </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto scrollbar-hide">
+              <table className="w-full text-right border-collapse">
+                  <thead>
+                      <tr className="bg-slate-50/50">
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-32">رقم الفاتورة</th>
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">التاريخ والوقت</th>
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">العميل</th>
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">نوع العملية</th>
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-left">القيمة الإجمالية</th>
+                          <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">إجراءات</th>
+                      </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                      {paginatedInvoices.map((invoice, idx) => {
+                          const typeStyle = getInvoiceTypeStyle(invoice.type);
+                          const TypeIcon = typeStyle.icon;
+                          
+                          return (
+                              <motion.tr 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.03 }}
+                                key={invoice.id} 
+                                className="group hover:bg-slate-50/50 transition-colors"
+                              >
+                                  <td className="p-5">
+                                      <div className="flex items-center gap-2">
+                                          <Hash size={14} className="text-slate-300" />
+                                          <span className="font-black text-sm text-slate-400 tabular-nums uppercase">{invoice.id.substring(0, 8)}</span>
+                                      </div>
+                                  </td>
+                                  <td className="p-5">
+                                      <div className="flex flex-col">
+                                          <span className="font-black text-slate-800 text-sm tracking-tight">{new Date(invoice.date).toLocaleDateString('ar-EG')}</span>
+                                          <span className="text-[10px] text-slate-400 font-bold tabular-nums uppercase">{new Date(invoice.date).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                                      </div>
+                                  </td>
+                                  <td className="p-5">
+                                      <div className="flex items-center gap-3">
+                                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                                              <UserIcon size={14} />
+                                          </div>
+                                          <span className="font-bold text-slate-700 text-sm">{invoice.customerInfo?.name || 'عميل نقدي'}</span>
+                                      </div>
+                                  </td>
+                                  <td className="p-5 text-center">
+                                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider ${typeStyle.className}`}>
+                                          <TypeIcon size={12} strokeWidth={3} />
+                                          {typeStyle.label}
+                                      </div>
+                                  </td>
+                                  <td className="p-5 text-left">
+                                      <span className="text-base font-black text-slate-800 tabular-nums">{invoice.total.toLocaleString()}</span>
+                                  </td>
+                                  <td className="p-5">
+                                      <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button 
+                                              onClick={() => setInvoiceToPrint(invoice)} 
+                                              className="p-2.5 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+                                              title="طباعة الفاتورة"
+                                          >
+                                              <Printer size={18} />
+                                          </button>
+                                          {invoice.type === 'sale' && (
+                                              currentUser.role === 'admin' ? (
+                                                  <button 
+                                                      onClick={() => setInvoiceToReturn(invoice)} 
+                                                      className="p-2.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                                                      title="إصدار مرتجع"
+                                                  >
+                                                      <RotateCcw size={18} />
+                                                  </button>
+                                              ) : (
+                                                  <button 
+                                                      onClick={() => setInvoiceToRequestReturn(invoice)} 
+                                                      className="p-2.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-all"
+                                                      title="طلب مرتجع"
+                                                  >
+                                                      <Inbox size={18} />
+                                                  </button>
+                                              )
+                                          )}
+                                      </div>
+                                  </td>
+                              </motion.tr>
+                          );
+                      })}
+                  </tbody>
+              </table>
+          </div>
+
+          <div className="p-6 lg:p-8 flex flex-col sm:flex-row justify-between items-center gap-6 border-t border-slate-50">
+              <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  Showing {paginatedInvoices.length} to {filteredInvoices.length} of {invoices.length} Records
+              </div>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} itemsPerPage={ITEMS_PER_PAGE} totalItems={filteredInvoices.length} />
+          </div>
+      </div>
+
+      <AnimatePresence>
+        {invoiceToPrint && (
+            <PrintInvoice 
+                invoice={invoiceToPrint} 
+                onClose={() => setInvoiceToPrint(null)} 
+                shopName={shopName} 
+                shopAddress={shopAddress} 
+            />
+        )}
+        {invoiceToReturn && (
+            <ReturnModal 
+                invoice={invoiceToReturn} 
+                onClose={() => setInvoiceToReturn(null)} 
+                onProcessReturn={handleProcessReturn} 
+            />
+        )}
+        {invoiceToRequestReturn && (
+            <RequestReturnModal 
+                invoice={invoiceToRequestReturn} 
+                onClose={() => setInvoiceToRequestReturn(null)} 
+                onSendRequest={handleSendReturnRequest} 
+            />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

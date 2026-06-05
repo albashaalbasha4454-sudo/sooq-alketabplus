@@ -2,48 +2,73 @@
 import React from 'react';
 import type { User } from '../types';
 import { Logo } from './Logo';
+import { motion } from 'motion/react';
+import { Menu, LogOut, ReceiptText, User as UserIcon } from 'lucide-react';
 
 interface HeaderProps {
-  currentUser: User;
-  onLogout: () => void;
-  toggleSidebar: () => void;
-  onOpenCloseTillModal: () => void;
+    currentUser: User;
+    onLogout: () => void;
+    toggleSidebar: () => void;
+    onOpenCloseTillModal: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, toggleSidebar, onOpenCloseTillModal }) => {
-  return (
-    <header className="bg-white shadow-md h-16 flex items-center justify-between px-6 z-10 sticky top-0 flex-shrink-0">
-        <div className="flex items-center gap-4">
-            <button onClick={toggleSidebar} className="md:hidden p-2 rounded-full hover:bg-gray-100">
-                <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="flex items-center gap-2">
-                <Logo className="h-10 w-10" />
-                <h1 className="text-xl font-bold text-gray-800 hidden sm:block">سوق الكتاب</h1>
-            </div>
-        </div>
-        <div className="flex items-center gap-4">
-            {currentUser.role === 'cashier' && (
+    return (
+        <motion.header 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-panel h-20 flex items-center justify-between px-8 z-40 sticky top-0 flex-shrink-0 border-b border-slate-200/50"
+        >
+            <div className="flex items-center gap-6">
                 <button 
-                    onClick={onOpenCloseTillModal} 
-                    className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 p-2 rounded-lg hover:bg-indigo-50 transition-colors"
-                    title="تقرير إغلاق الصندوق اليومي"
+                    onClick={toggleSidebar} 
+                    className="md:hidden p-2.5 rounded-xl hover:bg-slate-100 transition-colors text-slate-600"
                 >
-                    <span className="material-symbols-outlined">receipt_long</span>
-                    <span className="hidden sm:inline">إغلاق الصندوق</span>
+                    <Menu size={24} />
                 </button>
-            )}
-            <div className="text-right">
-                <p className="font-semibold text-gray-700">{currentUser.username}</p>
-                <p className="text-xs text-gray-500">{currentUser.role === 'admin' ? 'مدير' : 'كاشير'}</p>
+                <div className="flex items-center gap-3">
+                    <Logo className="h-12 w-12" />
+                    <div>
+                        <h1 className="text-xl font-extrabold text-slate-800 tracking-tight hidden sm:block">سوق الكتاب</h1>
+                        <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-[0.2em] hidden sm:block opacity-70">Inventory & POS v2.0</p>
+                    </div>
+                </div>
             </div>
-            <button onClick={onLogout} className="flex items-center gap-2 text-gray-600 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors">
-                <span className="material-symbols-outlined">logout</span>
-                <span className="hidden sm:inline">تسجيل الخروج</span>
-            </button>
-        </div>
-    </header>
-  );
+
+            <div className="flex items-center gap-3">
+                {currentUser.role === 'cashier' && (
+                    <button 
+                        onClick={onOpenCloseTillModal} 
+                        className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 px-4 py-2 rounded-xl hover:bg-indigo-50 transition-all font-medium"
+                        title="تقرير إغلاق الصندوق اليومي"
+                    >
+                        <ReceiptText size={20} />
+                        <span className="hidden sm:inline">إغلاق الصندوق</span>
+                    </button>
+                )}
+
+                <div className="h-10 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+
+                <div className="flex items-center gap-4 pl-2">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-sm font-bold text-slate-800 leading-none mb-1">{currentUser.username}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{currentUser.role === 'admin' ? 'مدير النظام' : 'كاشير'}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200 shadow-inner">
+                        <UserIcon size={20} />
+                    </div>
+                </div>
+
+                <button 
+                    onClick={onLogout} 
+                    className="flex items-center gap-2 text-slate-400 hover:text-red-600 p-2.5 rounded-xl hover:bg-red-50 transition-all"
+                    title="تسجيل الخروج"
+                >
+                    <LogOut size={22} />
+                </button>
+            </div>
+        </motion.header>
+    );
 };
 
 export default Header;
