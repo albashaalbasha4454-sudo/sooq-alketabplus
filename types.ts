@@ -46,6 +46,7 @@ export interface Customer {
 export interface User {
   id:string;
   username: string;
+  email?: string;
   passwordHash: string;
   salt: string;
   role: 'admin' | 'cashier';

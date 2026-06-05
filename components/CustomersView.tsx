@@ -12,9 +12,9 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface CustomersViewProps {
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, 'id'>) => void;
-  updateCustomer: (id: string, customer: Omit<Customer, 'id'>) => void;
-  deleteCustomer: (id: string) => void;
+  addCustomer: (customer: Omit<Customer, 'id'>) => void | Promise<any>;
+  updateCustomer: (id: string, customer: Omit<Customer, 'id'>) => void | Promise<any>;
+  deleteCustomer: (id: string) => void | Promise<any>;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -248,7 +248,7 @@ const CustomerModal: React.FC<{
       setError('الاسم ورقم الهاتف حقول إلزامية.');
       return;
     }
-    onSave({ name, phone, address, email, notes });
+    onSave({ name, phone, address, email, notes, balance: customer?.balance || 0 });
   };
 
   return (

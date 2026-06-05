@@ -57,11 +57,11 @@ import {
 import { Logo } from './components/Logo';
 import { softDelete } from './utils/recycleBin';
 
-const simpleHash = (password: string, salt: string) => `hashed_${password}_with_${salt}`;
+import { simpleHash, generateSalt } from './utils/authUtils';
 
 const App: React.FC = () => {
     // --- AUTH & SERVICES ---
-    const { currentUser, login, logout, loading: authLoading } = useFirebase();
+    const { currentUser, login, loginWithCredentials, logout, loading: authLoading } = useFirebase();
 
     // --- STATE MANAGEMENT (Backed by Firestore) ---
     const [users, setUsers] = useState<User[]>([]);
@@ -526,16 +526,30 @@ const App: React.FC = () => {
     
     // User management
     const addUser = async (userData: Omit<User, 'id' | 'passwordHash' | 'salt'> & { password: string }): Promise<User> => {
+        const salt = generateSalt();
         const newUser = await usersService.add({
             username: userData.username,
             role: userData.role,
-            email: userData.username // Assuming username is email for Firebase compatibility in this context
+            email: userData.username,
+            passwordHash: simpleHash(userData.password, salt),
+            salt: salt
         });
+        await logAction('USER_CREATED', `Created user: ${userData.username} (${userData.role})`, newUser.id, 'user');
         return newUser;
     };
 
-    const updateUser = async (id: string, userData: Partial<User>) => {
-        await usersService.update(id, userData);
+    const updateUser = async (id: string, userData: Partial<Omit<User, 'id' | 'passwordHash' | 'salt'>> & { password?: string }) => {
+        const updates: any = { ...userData };
+        delete updates.password;
+
+        if (userData.password) {
+            const salt = generateSalt();
+            updates.salt = salt;
+            updates.passwordHash = simpleHash(userData.password, salt);
+        }
+
+        await usersService.update(id, updates);
+        await logAction('USER_UPDATED', `Updated user: ${id}`, id, 'user');
     };
 
     const deleteUser = async (id: string) => {
@@ -578,7 +592,7 @@ const App: React.FC = () => {
     }
 
     if (!currentUser) {
-        return <LoginView onLogin={login} />;
+        return <LoginView onLogin={loginWithCredentials} />;
     }
 
     const views: { [key: string]: {element: React.ReactNode, label: string, icon: any, roles: Array<'admin' | 'cashier'>} } = {

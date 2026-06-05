@@ -211,10 +211,10 @@ const PrintInvoice: React.FC<PrintInvoiceProps> = ({ invoice, onClose, shopName,
                     <span>إجمالي الخصم:</span>
                     <span>-{totalDiscount.toFixed(2)}</span>
                 </div>
-                {invoice.shippingFee > 0 && (
+                {(invoice.shippingFee || 0) > 0 && (
                     <div className="flex justify-between text-sm p-2">
                         <span className="text-slate-500">رسوم الشحن:</span>
-                        <span className="font-medium text-slate-800">{invoice.shippingFee.toFixed(2)}</span>
+                        <span className="font-medium text-slate-800">{(invoice.shippingFee || 0).toFixed(2)}</span>
                     </div>
                 )}
                 <div className="flex justify-between text-xl font-black p-3 bg-slate-800 text-white rounded-lg shadow-md">

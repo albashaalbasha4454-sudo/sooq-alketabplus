@@ -40,7 +40,7 @@ const ReportsView: React.FC<{
   const salesByCategoryChartRef = useRef<HTMLCanvasElement>(null);
   const topProductsChartRef = useRef<HTMLCanvasElement>(null);
   const profitExpenseChartRef = useRef<HTMLCanvasElement>(null);
-  const chartInstances = useRef<{ [key: string]: Chart | null }>({});
+  const chartInstances = useRef<{ [key: string]: any }>({});
 
   const filteredData = useMemo(() => {
     const start = startDate ? new Date(startDate) : new Date('1970-01-01');
@@ -70,18 +70,21 @@ const ReportsView: React.FC<{
     return { totalRevenue, totalProfit, totalExpenses, netProfit };
   }, [filteredData]);
 
-  // Cleanup effect
   useEffect(() => {
     return () => {
-        // FIX: Using Object.keys to iterate and destroy charts to ensure proper type inference.
-        Object.keys(chartInstances.current).forEach(key => chartInstances.current[key]?.destroy());
+        Object.keys(chartInstances.current).forEach(key => {
+            const chart = chartInstances.current[key];
+            if (chart) chart.destroy();
+        });
     }
   }, []);
 
   // Update charts effect
   useEffect(() => {
-    // FIX: Using Object.keys to iterate and destroy charts to ensure proper type inference.
-    Object.keys(chartInstances.current).forEach(key => chartInstances.current[key]?.destroy());
+    Object.keys(chartInstances.current).forEach(key => {
+        const chart = chartInstances.current[key];
+        if (chart) chart.destroy();
+    });
     const { salesInvoices, filteredExpenses } = filteredData;
 
     // --- Chart 1: Sales by Category ---

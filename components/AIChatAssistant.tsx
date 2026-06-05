@@ -11,15 +11,15 @@ interface AIChatAssistantProps {
   expenses: Expense[];
   customers: Customer[];
   lowStockThreshold: number;
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  updateProduct: (id: string, product: Omit<Product, 'id'>) => void;
-  deleteProduct: (id: string) => void;
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-  deleteExpense: (id: string) => void;
-  addCustomer: (customer: Omit<Customer, 'id'>) => Customer;
-  updateCustomer: (id: string, customer: Omit<Customer, 'id'>) => void;
-  deleteCustomer: (id: string) => void;
-  onCompleteSale: (items: InvoiceItem[]) => void;
+  addProduct: (product: Omit<Product, 'id'>) => void | Promise<any>;
+  updateProduct: (id: string, product: Omit<Product, 'id'>) => void | Promise<any>;
+  deleteProduct: (id: string) => void | Promise<any>;
+  addExpense: (expense: Omit<Expense, 'id'>) => void | Promise<any>;
+  deleteExpense: (id: string) => void | Promise<any>;
+  addCustomer: (customer: Omit<Customer, 'id'>) => any | Promise<any>;
+  updateCustomer: (id: string, customer: Omit<Customer, 'id'>) => void | Promise<any>;
+  deleteCustomer: (id: string) => void | Promise<any>;
+  onCompleteSale: (items: InvoiceItem[]) => void | Promise<any>;
 }
 
 const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
@@ -349,62 +349,89 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
             let result;
             try {
                 if (funcCall.name === 'addProduct') {
-                    const args = funcCall.args as Omit<Product, 'id'>;
-                    addProduct(args);
+                    const args = funcCall.args as any;
+                    const productData: Omit<Product, 'id'> = {
+                        name: args.name,
+                        quantity: args.quantity,
+                        price: args.price,
+                        costPrice: args.costPrice || 0,
+                        author: args.author || '',
+                        category: args.category || '',
+                        type: 'product',
+                        barcode: '',
+                        publisher: '',
+                        isbn: '',
+                        rackNumber: ''
+                    };
+                    await addProduct(productData);
                     result = { success: true, message: `تمت إضافة الكتاب ${args.name} بنجاح.` };
                 } else if (funcCall.name === 'addExpense') {
                     const args = funcCall.args as Omit<Expense, 'id'>;
                     const expenseData = { ...args, date: new Date().toISOString() };
-                    addExpense(expenseData);
+                    await addExpense(expenseData);
                     result = { success: true, message: `تم تسجيل المصروف ${args.description} بنجاح.` };
                 } else if (funcCall.name === 'updateProduct') {
                     const args = funcCall.args as { id: string } & Partial<Omit<Product, 'id'>>;
                     const existingProduct = products.find(p => p.id === args.id);
                     if (existingProduct) {
-                        const updatedData = {
-                            name: args.name || existingProduct.name,
+                        const updatedData: Omit<Product, 'id'> = {
+                            name: args.name ?? existingProduct.name,
                             quantity: args.quantity ?? existingProduct.quantity,
                             price: args.price ?? existingProduct.price,
                             costPrice: args.costPrice ?? existingProduct.costPrice,
                             author: args.author ?? existingProduct.author,
                             category: args.category ?? existingProduct.category,
+                            type: existingProduct.type,
+                            barcode: existingProduct.barcode,
+                            publisher: existingProduct.publisher,
+                            isbn: existingProduct.isbn,
+                            rackNumber: existingProduct.rackNumber
                         };
-                        updateProduct(args.id, updatedData);
+                        await updateProduct(args.id, updatedData);
                         result = { success: true, message: `تم تحديث بيانات الكتاب ${updatedData.name} بنجاح.` };
                     } else {
                         result = { success: false, message: `لم يتم العثور على كتاب بالمعرف ${args.id}.` };
                     }
                 } else if (funcCall.name === 'deleteProduct') {
                     const { id } = funcCall.args as { id: string };
-                    deleteProduct(id);
+                    await deleteProduct(id);
                     result = { success: true, message: `تم حذف الكتاب بالمعرف ${id} بنجاح.` };
                 } else if (funcCall.name === 'deleteExpense') {
                     const { id } = funcCall.args as { id: string };
-                    deleteExpense(id);
+                    await deleteExpense(id);
                     result = { success: true, message: `تم حذف المصروف بالمعرف ${id} بنجاح.` };
                 } else if (funcCall.name === 'addCustomer') {
-                    const args = funcCall.args as Omit<Customer, 'id'>;
-                    const newCustomer = addCustomer(args);
+                    const args = funcCall.args as any;
+                    const customerData: Omit<Customer, 'id'> = {
+                        name: args.name,
+                        phone: args.phone,
+                        address: args.address || '',
+                        email: args.email || '',
+                        notes: args.notes || '',
+                        balance: 0
+                    };
+                    const newCustomer = await addCustomer(customerData);
                     result = { success: true, message: `تمت إضافة العميل ${newCustomer.name} بنجاح. معرف العميل هو ${newCustomer.id}.` };
                 } else if (funcCall.name === 'updateCustomer') {
                     const args = funcCall.args as { id: string } & Partial<Omit<Customer, 'id'>>;
                     const existingCustomer = customers.find(c => c.id === args.id);
                     if (existingCustomer) {
-                        const updatedData = {
-                            name: args.name || existingCustomer.name,
-                            phone: args.phone || existingCustomer.phone,
-                            address: args.address || existingCustomer.address,
-                            email: args.email || existingCustomer.email,
-                            notes: existingCustomer.notes,
+                        const updatedData: Omit<Customer, 'id'> = {
+                            name: args.name ?? existingCustomer.name,
+                            phone: args.phone ?? existingCustomer.phone,
+                            address: args.address ?? existingCustomer.address,
+                            email: args.email ?? existingCustomer.email,
+                            notes: args.notes ?? existingCustomer.notes,
+                            balance: existingCustomer.balance
                         };
-                        updateCustomer(args.id, updatedData);
+                        await updateCustomer(args.id, updatedData);
                         result = { success: true, message: `تم تحديث بيانات العميل ${updatedData.name} بنجاح.` };
                     } else {
                         result = { success: false, message: `لم يتم العثور على عميل بالمعرف ${args.id}.` };
                     }
                 } else if (funcCall.name === 'deleteCustomer') {
                     const { id } = funcCall.args as { id: string };
-                    deleteCustomer(id);
+                    await deleteCustomer(id);
                     result = { success: true, message: `تم حذف العميل بالمعرف ${id} بنجاح.` };
                 } else if (funcCall.name === 'createSale') {
                     const { items } = funcCall.args as { items: { productId: string, quantity: number }[] };
@@ -431,7 +458,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                         });
                     }
                     if (salePossible) {
-                        onCompleteSale(invoiceItems);
+                        await onCompleteSale(invoiceItems);
                         result = { success: true, message: 'تم إنشاء فاتورة البيع بنجاح.' };
                     }
                 }
@@ -453,7 +480,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
         response = await chatRef.current.sendMessage({ message: functionResponseParts });
       }
 
-      const text = response.text;
+      const text = response.text || '';
       setMessages(prev => [...prev, { role: 'model', content: text }]);
 
     } catch (err) {

@@ -5,27 +5,28 @@ import { User, Lock, ArrowRight, Loader2, BookOpen } from 'lucide-react';
 import { useFirebase } from './FirebaseProvider';
 
 interface LoginViewProps {
-  onLogin: (username: string, password: string) => Promise<boolean>;
+  onLogin: (username: string, password: string, systemCode: string) => Promise<boolean>;
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
-  const { login: firebaseLogin, user: firebaseUser, error: firebaseError } = useFirebase();
+  const { login: firebaseLogin, error: firebaseError } = useFirebase();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [systemCode, setSystemCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!username || !password) {
-      setError('الرجاء إدخال اسم المستخدم وكلمة المرور.');
+    if (!username || !password || !systemCode) {
+      setError('الرجاء إدخال اسم المستخدم وكلمة المرور والرمز.');
       return;
     }
     setIsLoading(true);
-    const success = await onLogin(username, password);
+    const success = await onLogin(username, password, systemCode);
     if (!success) {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
+      // Error handled by provider/setError
     }
     setIsLoading(false);
   };
@@ -60,6 +61,23 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
           
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">رقم الشركة (الرمز)</label>
+              <div className="relative group">
+                <ArrowRight size={18} className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  id="systemCode"
+                  type="text"
+                  value={systemCode}
+                  onChange={(e) => setSystemCode(e.target.value)}
+                  className="w-full px-5 py-4 pr-12 text-slate-700 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold"
+                  placeholder="رقم الاشتراك"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">اسم المستخدم</label>
               <div className="relative group">
@@ -134,7 +152,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" referrerPolicy="no-referrer" />
               <span>تسجيل الدخول عبر Google</span>
-              {firebaseUser && <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>}
             </button>
           </form>
         </div>

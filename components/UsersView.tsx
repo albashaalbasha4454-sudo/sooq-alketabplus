@@ -7,9 +7,9 @@ import { UserCog, UserPlus, Shield, ShieldCheck, Mail, Lock, Trash2, Edit3, More
 
 interface UsersViewProps {
   users: User[];
-  addUser: (user: Omit<User, 'id' | 'passwordHash' | 'salt'> & { password: string }) => User;
-  updateUser: (id: string, user: Partial<Omit<User, 'id' | 'passwordHash' | 'salt'>> & { password?: string }) => void;
-  deleteUser: (id: string) => void;
+  addUser: (user: Omit<User, 'id' | 'passwordHash' | 'salt'> & { password: string }) => any | Promise<any>;
+  updateUser: (id: string, user: Partial<Omit<User, 'id' | 'passwordHash' | 'salt'>> & { password?: string }) => void | Promise<any>;
+  deleteUser: (id: string) => void | Promise<any>;
   currentUser: User;
 }
 
@@ -231,11 +231,11 @@ const UserModal: React.FC<{
     <Modal isOpen={true} onClose={onClose} title={isEditing ? 'تعديل بيانات المستخدم' : 'إضافة مستخدم جديد'}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <InputField
+          id="username"
           label="اسم المستخدم"
           value={username}
-          onChange={setUsername}
+          onChange={(e) => setUsername(e.target.value)}
           placeholder="أدخل اسم المستخدم"
-          required
         />
         <div className="space-y-1">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">الصلاحية</label>
@@ -249,12 +249,12 @@ const UserModal: React.FC<{
           </select>
         </div>
         <InputField
+          id="password"
           label={isEditing ? 'تغيير كلمة المرور (اتركه فارغاً للحفاظ على القديمة)' : 'كلمة المرور'}
           value={password}
-          onChange={setPassword}
+          onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="أدخل الحماية هنا"
-          required={!isEditing}
         />
         <div className="flex gap-4 pt-4 border-t border-slate-100">
           <button type="button" onClick={onClose} className="flex-1 px-4 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">

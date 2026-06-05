@@ -10,13 +10,13 @@ interface PurchasesViewProps {
   suppliers: Supplier[];
   accounts: FinancialAccount[];
   accountBalances: Map<string, number>;
-  onAddPurchase: (purchase: Omit<Purchase, 'id'>) => void;
-  onUpdatePurchase: (id: string, purchase: Purchase) => void;
-  onDeletePurchase: (id: string) => void;
-  onAddSupplier: (supplier: Omit<Supplier, 'id'>) => Supplier;
-  onAddPayment: (purchaseId: string, amount: number, accountId: string) => void;
-  createProduct: (product: Omit<Product, 'id'>) => Product;
-  updateProduct: (id: string, product: Omit<Product, 'id'>) => void;
+  onAddPurchase: (purchase: Omit<Purchase, 'id'>) => void | Promise<any>;
+  onUpdatePurchase: (id: string, purchase: Partial<Purchase>) => void | Promise<any>;
+  onDeletePurchase: (id: string) => void | Promise<any>;
+  onAddSupplier: (supplier: Omit<Supplier, 'id'>) => any | Promise<any>;
+  onAddPayment: (purchaseId: string, amount: number, accountId: string) => void | Promise<any>;
+  createProduct: (product: Omit<Product, 'id'>) => any | Promise<any>;
+  updateProduct: (id: string, product: Omit<Product, 'id'>) => void | Promise<any>;
 }
 
 const ITEMS_PER_PAGE = 10;

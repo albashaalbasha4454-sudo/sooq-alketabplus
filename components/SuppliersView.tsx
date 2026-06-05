@@ -6,9 +6,9 @@ import Pagination from './common/Pagination';
 
 interface SuppliersViewProps {
   suppliers: Supplier[];
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => Supplier;
-  updateSupplier: (id: string, supplier: Omit<Supplier, 'id'>) => void;
-  deleteSupplier: (id: string) => void;
+  addSupplier: (supplier: Omit<Supplier, 'id'>) => any | Promise<any>;
+  updateSupplier: (id: string, supplier: Omit<Supplier, 'id'>) => void | Promise<any>;
+  deleteSupplier: (id: string) => void | Promise<any>;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -143,7 +143,7 @@ const SupplierModal: React.FC<{
       setError('اسم المورد حقل إلزامي.');
       return;
     }
-    onSave({ name, contactPerson, phone, email, address });
+    onSave({ name, contactPerson, phone, email, address, balance: supplier?.balance || 0 });
   };
 
   return (

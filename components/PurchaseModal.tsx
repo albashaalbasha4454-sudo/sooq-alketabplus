@@ -6,11 +6,11 @@ import InputField from './common/InputField';
 interface PurchaseModalProps {
   products: Product[];
   suppliers: Supplier[];
-  onSave: (purchase: Omit<Purchase, 'id'>) => void;
+  onSave: (purchase: Omit<Purchase, 'id'>) => void | Promise<any>;
   onCancel: () => void;
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => Supplier;
-  createProduct: (product: Omit<Product, 'id'>) => Product;
-  updateProduct: (id: string, product: Omit<Product, 'id'>) => void;
+  addSupplier: (supplier: Omit<Supplier, 'id'>) => any | Promise<any>;
+  createProduct: (product: Omit<Product, 'id'>) => any | Promise<any>;
+  updateProduct: (id: string, product: Omit<Product, 'id'>) => void | Promise<any>;
 }
 
 type PurchaseItemState = {
@@ -58,13 +58,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ products, suppliers, onSa
     setItems(items.filter((item) => item.key !== key));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalSupplierId = supplierId;
     let finalSupplierName = suppliers.find(s => s.id === supplierId)?.name || '';
 
     if (supplierId === 'new' && newSupplierName.trim()) {
-      const newSupplier = addSupplier({ name: newSupplierName.trim() });
+      const newSupplier = await addSupplier({ name: newSupplierName.trim(), balance: 0 });
       finalSupplierId = newSupplier.id;
       finalSupplierName = newSupplier.name;
     } else if (!finalSupplierId) {
@@ -104,9 +104,15 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ products, suppliers, onSa
                 quantity: 0, // Initial quantity is 0, will be updated on stock-in
                 price: !isNaN(price) ? price : 0,
                 costPrice: costPrice,
-                category: item.category.trim()
+                category: item.category.trim(),
+                type: 'product' as const,
+                author: '',
+                barcode: '',
+                publisher: '',
+                isbn: '',
+                rackNumber: ''
             };
-            const newProduct = createProduct(newProductData);
+            const newProduct = await createProduct(newProductData);
             currentProductId = newProduct.id;
             currentProductName = newProduct.name;
         } else {
@@ -117,13 +123,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ products, suppliers, onSa
              // Check if product data needs update
              const needsUpdate = product.costPrice !== costPrice || (!isNaN(price) && product.price !== price) || (item.category && product.category !== item.category);
              if(needsUpdate) {
-                updateProduct(product.id, {
+                await updateProduct(product.id, {
                     name: product.name,
                     author: product.author,
                     quantity: product.quantity,
                     costPrice: costPrice,
                     price: !isNaN(price) ? price : product.price,
                     category: item.category || product.category,
+                    type: product.type
                 });
              }
         }
@@ -145,7 +152,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ products, suppliers, onSa
 
     const totalCost = finalItems.reduce((sum, item) => sum + item.quantity * item.costPrice, 0);
 
-    onSave({
+    await onSave({
       date: new Date(date).toISOString(),
       supplierId: finalSupplierId,
       supplierName: finalSupplierName,

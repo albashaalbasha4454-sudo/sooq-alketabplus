@@ -138,7 +138,7 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
             } else if (stockStatus === 'out') {
                 matchesStock = prod.type === 'product' && prod.quantity === 0;
             } else if (stockStatus === 'available') {
-                matchesStock = prod.type === 'digital' || prod.quantity > 5;
+                matchesStock = prod.type === 'service' || prod.quantity > 5;
             }
 
             return matchesQuery && matchesPrice && matchesStock;
@@ -146,10 +146,10 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
             id: prod.id,
             type: 'product' as const,
             title: prod.name,
-            subtitle: `${prod.author ? `المؤلف: ${prod.author}` : ''} | السعر: ${prod.price.toLocaleString()} ر.س | المخزن: ${prod.type === 'digital' ? 'رقمي' : `${prod.quantity} حبة`} | الرف: ${prod.rackNumber || 'غير محدد'}`,
+            subtitle: `${prod.author ? `المؤلف: ${prod.author}` : ''} | السعر: ${prod.price.toLocaleString()} ر.س | المخزن: ${prod.type === 'service' ? 'خدمة' : `${prod.quantity} حبة`} | الرف: ${prod.rackNumber || 'غير محدد'}`,
             icon: Package,
             payload: prod,
-            badge: prod.type === 'digital' ? 'كتاب رقمي' : (prod.quantity === 0 ? 'نفذ المخزون' : 'كتاب في المخزن')
+            badge: prod.type === 'service' ? 'خدمة' : (prod.quantity === 0 ? 'نفذ المخزون' : 'كتاب في المخزن')
         }));
 
         // 3. Invoices
@@ -204,8 +204,8 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
         const filteredSuppliers = suppliers.filter(sup => {
             const matchesQuery = !query || 
                 sup.name.toLowerCase().includes(query) || 
-                sup.phone.includes(query) || 
-                sup.representativeName?.toLowerCase().includes(query);
+                (sup.phone && sup.phone.includes(query)) || 
+                (sup.contactPerson && sup.contactPerson.toLowerCase().includes(query));
 
             let matchesDebt = true;
             if (debtStatus === 'has-debt') {
@@ -219,7 +219,7 @@ export const DetailedSearchModal: React.FC<DetailedSearchModalProps> = ({
             id: sup.id,
             type: 'contact' as const,
             title: `المورد: ${sup.name}`,
-            subtitle: `الهاتف: ${sup.phone} | المندوب: ${sup.representativeName || 'لا يوجد'} | الرصيد: ${(sup.balance || 0).toLocaleString()} ر.س`,
+            subtitle: `الهاتف: ${sup.phone || 'غير مسجل'} | المحصل: ${sup.contactPerson || 'لا يوجد'} | الرصيد: ${(sup.balance || 0).toLocaleString()} ر.س`,
             icon: Building2,
             payload: { ...sup, contactType: 'supplier' },
             badge: 'موزع معتمد'
