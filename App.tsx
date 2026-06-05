@@ -42,7 +42,7 @@ import {
     Landmark, Archive, UserCog, HardDriveDownload, 
     ScrollText, Trash2, Database, Settings, 
     ChevronLeft, LogOut, Search, Bell,
-    Menu, X, Sparkles, ChevronRight
+    Menu, X, ChevronRight
 } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { softDelete } from './utils/recycleBin';
