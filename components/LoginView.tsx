@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import React,{useState}from'react';
 
 type Props={onLogin:()=>Promise<void>};
 const W=import.meta.env.VITE_LOGIN_WORD||'admin';
@@ -9,4 +9,4 @@ export default function LoginView({onLogin}:Props){
  const [c,setC]=useState('');
  const [e,setE]=useState('');
  function go(){if(w===W&&c===C)void onLogin();else setE('Invalid access');}
- return <main><h1>Sooq Alketab</h
+ return React.createElement('main',null,
