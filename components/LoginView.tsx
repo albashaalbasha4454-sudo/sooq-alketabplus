@@ -1,7 +1,9 @@
 import React from 'react';
+import { BookOpen, Search, ShieldCheck, Sparkles } from 'lucide-react';
 
-type Props={onLogin:()=>Promise<void>};
+type Props = { onLogin: () => Promise<void> };
 
-export default function LoginView({onLogin}:Props){
-  return <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50"><button onClick={()=>void onLogin()} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold">تسجيل الدخول عبر Google</button></div>;
-}
+const features = [
+  { icon: BookOpen, title: 'مكتبة وكتالوج كتب', text: 'عرض الكتب والخدمات والطلبات من واجهة عربية واضحة.' },
+  { icon: Search, title: 'بحث وتنظيم', text: 'مدخل موحد للوصول إلى الكتب والطلبات ولوحة الإدارة.' },
+  { icon: ShieldCheck, title: 'إدارة آمنة', text: 'ت
