@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, BookOpen } from 'lucide-react';
-
+import { BookOpen, Loader2 } from 'lucide-react';
 import { useFirebase } from './FirebaseProvider';
 
 interface LoginViewProps {
@@ -9,5 +7,8 @@ interface LoginViewProps {
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
-  const { user: firebaseUser, error: firebaseError } = useFirebase();
-  const [isLoading, setIsLoading] = use
+  const { error: firebaseError } = useFirebase();
+  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
+
+  const handleGoogle
