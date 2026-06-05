@@ -9,4 +9,4 @@ interface FirebaseContextType {
   loading: boolean;
   isAdmin: boolean;
   error: string | null;
-  loginWithCredentials
+  loginWithCredentials: (username
